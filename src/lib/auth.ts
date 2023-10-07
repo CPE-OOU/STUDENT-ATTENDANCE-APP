@@ -1,5 +1,5 @@
-import { db } from '@/config/db/client';
-import { User, users } from '@/config/db/schema';
+import { db } from '../config/db/client';
+import { User, users } from '../config/db/schema';
 import { eq } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import bcrypt from 'bcrypt';
@@ -36,7 +36,7 @@ export const hashPassword = async (
   saltLength = SALT_LENGTH
 ) => {
   const salt = await bcrypt.genSalt(saltLength);
-  const hashedPassword = argon2.hash(plainPassword, {
+  const hashedPassword = await argon2.hash(plainPassword, {
     salt: Buffer.from(salt),
     saltLength,
   });
