@@ -1,0 +1,27 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1696576986839,
+      "tag": "0000_heavy_jamie_braddock",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1696577016138,
+      "tag": "0001_smiling_risque",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1696578285762,
+      "tag": "0002_foamy_giant_girl",
+      "breakpoints": true
+    }
+  ]
+}
