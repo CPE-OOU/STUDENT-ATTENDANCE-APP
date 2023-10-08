@@ -14,7 +14,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { TypeOf, object, string } from 'zod';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useGlobalState } from '@/hooks/use-global-state';
 
 interface SignUpFormProps {
   accountType: 'student' | 'teacher';
@@ -41,10 +42,18 @@ export function SignUpForm({ accountType }: SignUpFormProps) {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const { setInitialRegTeacherClassSetup } = useGlobalState();
+  const { data, mutate, isSuccess, isLoading } = useRegisterUser();
 
-  const { isLoading, data, mutate } = useRegisterUser();
+  useEffect(() => {
+    if (isSuccess) {
+      if (data?.type === 'teacher') {
+        setInitialRegTeacherClassSetup(true);
+      }
+    }
+  }, [isSuccess]);
 
-  const isSubmitting = form.formState.isSubmitting;
+  const isSubmitting = form.formState.isSubmitting || isLoading;
   return (
     <div>
       <Form {...form}>

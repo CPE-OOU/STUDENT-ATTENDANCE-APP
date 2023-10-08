@@ -5,6 +5,7 @@ import { ChooseAccountType } from '@/components/choose-account-type';
 import { useRegisterUser } from '@/mutations/useRegisterUser';
 import { useEffect, useState } from 'react';
 import { SignUpForm } from './__components/form';
+import Link from 'next/link';
 
 export default function SignupPage() {
   const [accountType, setAccountType] = useState<null | 'student' | 'teacher'>(
@@ -33,6 +34,15 @@ export default function SignupPage() {
               Choose your{' '}
               <span className="font-bold text-[#FDCB9E]">account</span> type
             </h2>
+            <div className="mt-2 text-4 leading-6 font-medium">
+              Already have an account?{' '}
+              <Link
+                href="/sign-in"
+                className="text-primary font-bold underline block"
+              >
+                login
+              </Link>
+            </div>
           </div>
           <div>
             {accountType ? (

@@ -15,20 +15,23 @@ const options: NextAuthOptions = {
         password: { type: 'password', label: 'password' },
       },
       async authorize(credentials) {
-        if (credentials?.email && credentials.password) {
-          throw new Error('Invalid login credential');
+        console.log(credentials);
+        if (!(credentials?.email && credentials.password)) {
+          throw new Error(
+            'Missing login credential email or password field missing'
+          );
         }
-
         const [user] = await db
           .select()
           .from(users)
           .where(eq(users.email, credentials!.email));
 
+        console.log({ user });
         if (!user) {
           throw Error('User credential not a match. Check email or password');
         }
 
-        return user;
+        return user ?? null;
       },
     }),
   ],

@@ -1,6 +1,6 @@
 import { ClientUserForm, User } from '@/config/db/schema';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { toast } from 'sonner';
 
 type UserCreateAccountType = NonNullable<User['type']>;
@@ -14,7 +14,7 @@ const useRegisterUser = () => {
       data: ClientUserForm;
       type: UserCreateAccountType;
     }) => {
-      const user = await axios.post(
+      const user = await axios.post<User>(
         `/api/auth/register?accountType=${type}`,
         data
       );
@@ -24,7 +24,7 @@ const useRegisterUser = () => {
         password: data.password,
       });
 
-      return user;
+      return user.data;
     },
     onSuccess: (_, { type }) => {
       toast(`Your account as ${type} is created`);
