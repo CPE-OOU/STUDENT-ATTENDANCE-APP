@@ -7,11 +7,10 @@ import { useGlobalState } from '@/hooks/use-global-state';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { ZodString, object, string } from 'zod';
-import { addMinutes, addSeconds } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 
-import { useTimer } from 'react-timer-hook';
+import { ResendCode } from './resend-count';
+import { useForceUpdate } from '@/hooks/use-force-update';
 type AuthCodeBox = { [K in `code-${number}`]: ZodString };
 
 function generateCodeBoxDefaults<T>(length: number, fn: () => T) {
@@ -21,16 +20,13 @@ function generateCodeBoxDefaults<T>(length: number, fn: () => T) {
 }
 
 export const VerifyAccountForm = () => {
-  const {
-    accountVerifyTokenLength = 4,
-    tokenResendTrialTime: {
-      type: tokenResendTimeType,
-      value: tokenResendTimeValue,
-    } = { type: 'm', value: 2 },
-  } = useGlobalState(({ accountVerifyTokenLength, tokenResendTrialTime }) => ({
-    accountVerifyTokenLength,
-    tokenResendTrialTime,
-  }));
+  const { accountVerifyTokenLength = 4 } = useGlobalState(
+    ({ accountVerifyTokenLength }) => ({
+      accountVerifyTokenLength,
+    })
+  );
+
+  const forceUpdate = useForceUpdate();
 
   const inputRefs = useRef<Record<`code-${number}`, HTMLInputElement | null>>(
     {}
@@ -39,17 +35,6 @@ export const VerifyAccountForm = () => {
   const formSchema = object<AuthCodeBox>(
     generateCodeBoxDefaults(accountVerifyTokenLength, () => string())
   );
-
-  const startCount = useMemo(() => new Date(), []);
-  const endRetryCode =
-    tokenResendTimeType === 's'
-      ? addSeconds(startCount, tokenResendTimeValue)
-      : addMinutes(startCount, tokenResendTimeValue);
-
-  const { minutes, seconds, isRunning, restart } = useTimer({
-    expiryTimestamp: endRetryCode,
-    autoStart: true,
-  });
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -104,11 +89,16 @@ export const VerifyAccountForm = () => {
                           if (!otpMatch) return;
 
                           otpMatch.split(/\B/).forEach((digit, i) => {
-                            console.log({ digit: i + 1 });
                             form.setValue(`code-${i + 1}`, digit);
                           });
 
-                          (event.target as HTMLInputElement).blur();
+                          inputRefs.current[
+                            digitKeyField.replace(
+                              /\d+$/,
+                              formDigitFields.length.toString()
+                            ) as `code-${number}`
+                          ]?.focus();
+                          forceUpdate();
                         }}
                         onKeyUp={(event) => {
                           event.stopPropagation();
@@ -174,33 +164,7 @@ export const VerifyAccountForm = () => {
               Verify
             </Button>
             <div className="w-[274px]">
-              <p className="font-normal text-transparent text-[16px] tracking-[0] leading-[24px] whitespace-nowrap">
-                <span className="font-medium text-[#3f3f44]">
-                  Didn't receive code?{' '}
-                </span>
-                <Button
-                  variant="ghost"
-                  disabled={isRunning}
-                  className={cn(
-                    'font-semibold text-[#fdcb9e] underline',
-                    isRunning && 'disabled:opacity-70'
-                  )}
-                  onClick={async () => {
-                    if (isRunning) return;
-                    restart(addMinutes(new Date(), 2));
-                  }}
-                >
-                  Resend now
-                </Button>
-                <span
-                  className={cn(
-                    'font-medium text-slate-400',
-                    !isRunning && 'opacity-0'
-                  )}
-                >
-                  {`${minutes}:${seconds.toString().padStart(2, '0')}`}
-                </span>
-              </p>
+              <ResendCode />
             </div>
           </div>
         </form>
