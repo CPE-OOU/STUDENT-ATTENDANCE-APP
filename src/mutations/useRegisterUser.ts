@@ -1,6 +1,6 @@
 import { ClientUserForm, User } from '@/config/db/schema';
 import { useMutation } from '@tanstack/react-query';
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import { toast } from 'sonner';
 
 type UserCreateAccountType = NonNullable<User['type']>;
