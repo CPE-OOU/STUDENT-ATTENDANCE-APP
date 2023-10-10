@@ -13,18 +13,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { TypeOf, object, string } from 'zod';
 import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
-import {
-  redirect,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useGlobalState } from '@/hooks/use-global-state';
+import { useProfile } from '@/queries/use-profile';
 
 const formSchema = object({
   email: string().email(),
@@ -46,6 +42,8 @@ export default function SigninPage() {
     })
   );
 
+  const { refetch } = useProfile(false);
+
   const [showPassword] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -58,25 +56,39 @@ export default function SigninPage() {
     }
   }, []);
 
-  async function onSubmit(data: SigninFormData) {
+  async function onSubmit(formData: SigninFormData) {
     try {
-      await signIn('credentials', data);
-      toast.success('Welcome back. Login successful', { duration: 3000 });
-      let redirectUrl = authRedirectUrl ?? '/dashboard';
+      await signIn('credentials', {
+        redirect: false,
+        ...formData,
+      });
+
+      const { data: userData } = await refetch();
+      form.reset();
+      toast.success('Welcome back. Login successful', { duration: 2000 });
+      if (!userData) {
+        return router.refresh();
+      }
+      const userMailVerified = !!userData.data.emailVerified;
+      let redirectUrl = !userMailVerified
+        ? '/verify-account?mode=request&type=account-verify'
+        : !userData.data.setting.setupCompleted
+        ? '/set-up'
+        : authRedirectUrl ?? '/dashboard';
+
       return setTimeout(() => {
         router.push(redirectUrl);
-      }, 2000);
+      }, 1000);
     } catch (e) {
-      console.log(e);
       if (Object(e) === e && e instanceof Error) {
         if (!/internal/i.test(e.message)) {
-          toast.error('Failed sign in', {
+          toast.error('Failed sign in attempt', {
             duration: 3000,
             description: e.message,
           });
         }
       }
-      toast.error('Failed sign in', {
+      toast.error('Sign in error', {
         description: 'Something went wrong while signing user in',
       });
     }
