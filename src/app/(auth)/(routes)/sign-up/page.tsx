@@ -1,25 +1,10 @@
 'use client';
 
 import { Banner } from '@/components/banner';
-import { ChooseAccountType } from '@/components/choose-account-type';
-import { useRegisterUser } from '@/mutations/useRegisterUser';
-import { useEffect, useState } from 'react';
 import { SignUpForm } from './__components/form';
 import Link from 'next/link';
 
 export default function SignupPage() {
-  const [accountType, setAccountType] = useState<null | 'student' | 'teacher'>(
-    null
-  );
-  const [reselectAccountType, setReselectAccountType] = useState(false);
-  const { isLoading, error, data } = useRegisterUser();
-
-  useEffect(() => {
-    if (reselectAccountType) {
-      setAccountType(null);
-    }
-  }, [reselectAccountType]);
-
   return (
     <div className="p-6 flex h-full w-full gap-x-[72px] rounded-3xl">
       <Banner
@@ -45,15 +30,7 @@ export default function SignupPage() {
             </div>
           </div>
           <div>
-            {accountType ? (
-              <SignUpForm accountType={accountType} />
-            ) : (
-              <ChooseAccountType
-                onSelectAccountCreateType={(data) => {
-                  setAccountType(data.type);
-                }}
-              />
-            )}
+            <SignUpForm />
           </div>
         </div>
       </div>
