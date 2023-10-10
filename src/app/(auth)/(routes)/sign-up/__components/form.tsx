@@ -16,12 +16,9 @@ import { TypeOf, object, string } from 'zod';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
 import { useGlobalState } from '@/hooks/use-global-state';
+import { useRouter } from 'next/navigation';
 
-interface SignUpFormProps {
-  accountType: 'student' | 'teacher';
-}
-
-const clientCreateNewUserValidator = object({
+export const clientCreateNewUserValidator = object({
   firstName: string().min(1).max(64),
   lastName: string().min(1).max(64),
   email: string().email(),
@@ -29,7 +26,7 @@ const clientCreateNewUserValidator = object({
   confirmPassword: string().min(8),
 });
 
-export function SignUpForm({ accountType }: SignUpFormProps) {
+export function SignUpForm() {
   const form = useForm<TypeOf<typeof clientCreateNewUserValidator>>({
     resolver: zodResolver(clientCreateNewUserValidator),
     defaultValues: {
@@ -44,12 +41,10 @@ export function SignUpForm({ accountType }: SignUpFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const { setInitialRegTeacherClassSetup } = useGlobalState();
   const { data, mutate, isSuccess, isLoading } = useRegisterUser();
-
+  const router = useRouter();
   useEffect(() => {
     if (isSuccess) {
-      if (data?.type === 'teacher') {
-        setInitialRegTeacherClassSetup(true);
-      }
+      router.push('verify-account');
     }
   }, [isSuccess]);
 
@@ -58,9 +53,7 @@ export function SignUpForm({ accountType }: SignUpFormProps) {
     <div>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((data) =>
-            mutate({ data, type: accountType })
-          )}
+          onSubmit={form.handleSubmit((data) => mutate({ data }))}
           className="max-w-[507px] flex flex-col gap-y-[32px]"
         >
           <div className="flex gap-x-4">
