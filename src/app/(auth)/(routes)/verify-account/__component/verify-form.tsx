@@ -43,7 +43,7 @@ export const VerifyAccountForm = () => {
     defaultValues: generateCodeBoxDefaults(accountVerifyTokenLength, () => ''),
   });
 
-  const { data, mutate, isLoading, isSuccess } = useVerifyAccountMutation();
+  const { mutate, isLoading, isSuccess } = useVerifyAccountMutation();
   const router = useRouter();
   const formData = form.getValues();
   const formDigitFields = Object.keys(formData).sort();
@@ -171,7 +171,6 @@ export const VerifyAccountForm = () => {
               />
             ))}
           </div>
-
           <div className="flex flex-col gap-y-6">
             <Button
               variant="primary"
@@ -181,12 +180,12 @@ export const VerifyAccountForm = () => {
             >
               Verify
             </Button>
-            <div className="w-[274px]">
-              <ResendCode />
-            </div>
           </div>
         </form>
       </Form>
+      <div className="w-[274px]">
+        <ResendCode />
+      </div>
     </div>
   );
 };
