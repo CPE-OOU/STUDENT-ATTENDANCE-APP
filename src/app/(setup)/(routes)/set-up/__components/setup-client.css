@@ -1,0 +1,38 @@
+.rc-steps-navigation {
+  width: 660px;
+}
+
+.rc-steps-navigation .rc-steps-item-active .rc-steps-item-container {
+  border-bottom: none;
+}
+
+.rc-steps-item-process .rc-steps-item-icon {
+  background-color: #cceabb;
+}
+
+.rc-steps-item-process .rc-steps-item-icon > .rc-steps-icon {
+  color: #3f3f44;
+}
+
+.rc-steps-item-icon {
+  border: none !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+}
+
+.rc-steps-item-icon > .rc-steps-icon {
+  font-size: 20px;
+}
+
+.rc-steps-item-container {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.rc-steps-horizontal:not(.rc-steps-label-vertical) .rc-steps-item {
+  margin-left: 20px;
+}
