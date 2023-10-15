@@ -1,48 +1,69 @@
 import { db } from '@/config/db/client';
 import { createNewUserValidator, users } from '@/config/db/schema';
-import { object, enum as enum_, ZodError } from 'zod';
+import { object, ZodError } from 'zod';
 import { getUserAccountCreated } from './server.message';
 import { NextResponse } from 'next/server';
 
 import { getRecordAlreadyExistResponse } from '@/lib/response';
-import { createInvalidPayloadResponse } from '@/lib/utils';
-
-const queryValidator = object({
-  accountType: enum_(users.type.enumValues),
-});
+import {
+  createClientAuthTokenInfo,
+  createInvalidPayloadResponse,
+} from '@/lib/utils';
+import { novuNotification } from '@/lib/nov.notification';
+import { generateOTP } from '@/lib/otp-generate';
+import { parsedEnv } from '@/config/env/validate';
+import { getClientIp, Request as ExpressRequest } from 'request-ip';
+import { StatusCodes } from 'http-status-codes';
 
 const requestDataValidator = object({
   body: createNewUserValidator,
-  query: queryValidator,
 });
 
 export const POST = async (req: Request) => {
   try {
-    const {
-      body: regFormData,
-      query: { accountType },
-    } = await requestDataValidator.parseAsync({
-      body: await req.json(),
-      query: Object.fromEntries(new URL(req.url).searchParams),
-    });
+    const regFormData = (
+      await requestDataValidator.parseAsync({
+        body: await req.json(),
+      })
+    ).body;
 
-    const { firstName, lastName, email, hashedPassword, image, salt } =
-      regFormData;
-
+    const { firstName, lastName, email, hashedPassword, salt } = regFormData;
     const [newUser] = await db
       .insert(users)
       .values({
         firstName,
         lastName,
         email,
-        image: image ?? null,
         hashedPassword,
-        type: accountType,
         passwordSalt: salt,
       })
       .returning();
 
-    return getUserAccountCreated(newUser);
+    const token = await generateOTP(
+      'account-verify',
+      newUser.id,
+      getClientIp(req as unknown as ExpressRequest)
+    );
+
+    await novuNotification.trigger('account-activation', {
+      to: {
+        subscriberId: newUser.id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+      },
+      payload: {
+        otp: token.token,
+        companyName: 'GURU',
+        confirmationLink: `${parsedEnv.NEXTAUTH_URL}/auth/verify-account?token=${token.token}`,
+        expiresAt: new Date().toISOString(),
+      },
+    });
+
+    return getUserAccountCreated({
+      user: newUser,
+      otp: createClientAuthTokenInfo(token),
+    });
   } catch (e) {
     console.log('[CREATE USER ACCOUNT]', e);
     if (Object(e) === e) {
@@ -58,6 +79,8 @@ export const POST = async (req: Request) => {
         }
       }
     }
-    return NextResponse.json((e as any)?.message);
+    return NextResponse.json((e as any)?.message, {
+      status: StatusCodes.INTERNAL_SERVER_ERROR,
+    });
   }
 };
