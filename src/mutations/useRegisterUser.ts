@@ -1,23 +1,13 @@
 import { ClientUserForm, User } from '@/config/db/schema';
+import { FailedServerResponsePayload } from '@/lib/response';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { toast } from 'sonner';
-
-type UserCreateAccountType = NonNullable<User['type']>;
 
 const useRegisterUser = () => {
   return useMutation({
-    mutationFn: async ({
-      data,
-      type,
-    }: {
-      data: ClientUserForm;
-      type: UserCreateAccountType;
-    }) => {
-      const user = await axios.post<User>(
-        `/api/auth/register?accountType=${type}`,
-        data
-      );
+    mutationFn: async ({ data }: { data: ClientUserForm }) => {
+      const user = await axios.post<User>(`/api/auth/register`, data);
 
       await axios.post(`/api/auth/signin`, {
         email: data.email,
@@ -26,8 +16,24 @@ const useRegisterUser = () => {
 
       return user.data;
     },
-    onSuccess: (_, { type }) => {
-      toast(`Your account as ${type} is created`);
+    onSuccess: (_) => {
+      toast(`Welcome on GURU platform`);
+    },
+
+    onError: (error) => {
+      if (error instanceof AxiosError) {
+        if (error.response) {
+          const failedResponseData = error.response
+            .data as FailedServerResponsePayload;
+
+          return toast.error(failedResponseData.title, {
+            description: failedResponseData.message,
+          });
+        }
+      }
+      toast.error('Internal server error', {
+        description: 'Something went wrong while registering your account.',
+      });
     },
   });
 };
