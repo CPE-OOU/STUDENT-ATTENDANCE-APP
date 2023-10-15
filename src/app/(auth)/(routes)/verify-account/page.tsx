@@ -2,12 +2,25 @@
 import { Banner } from '@/components/banner';
 import { VerifyAccountForm } from './__component/verify-form';
 import { useEffect, useState } from 'react';
+import { useProfile } from '@/queries/use-profile';
+import { useRouter } from 'next/navigation';
 
 export default function VerifyEmailPage() {
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const { isLoading, data, error } = useProfile();
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  if (isLoading) return null;
+
+  if (error) throw error;
+
+  if (data?.data.emailVerified) {
+    return router.push('/dashboard');
+  }
+
   return (
     <div className="p-6 flex h-full w-full gap-x-[72px] rounded-3xl">
       <Banner
