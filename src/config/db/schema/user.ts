@@ -1,16 +1,18 @@
+import { relations } from 'drizzle-orm';
 import { hashPassword } from '../../../lib/auth';
 import { timestamp, pgTable, text, pgEnum, uuid } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { TypeOf, object, string } from 'zod';
+import { authTokens, otpChangeFields } from '.';
 export const accountType = pgEnum('account_type', ['student', 'teacher']);
 
 export const users = pgTable('user', {
   id: uuid('id').primaryKey().defaultRandom(),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
+  imageUrl: text('image_url'),
   email: text('email').notNull().unique(),
   emailVerified: timestamp('emailVerified', { mode: 'date' }),
-  image: text('image'),
   type: accountType('type'),
   hashedPassword: text('hashed_password'),
   passwordSalt: text('password_salt'),
@@ -30,11 +32,15 @@ export const users = pgTable('user', {
 
 export type User = typeof users.$inferSelect;
 
+export const userRelations = relations(users, ({ many }) => ({
+  otpChangeFields: many(otpChangeFields),
+  otpTokens: many(authTokens),
+}));
+
 export const clientCreateNewUserValidator = createInsertSchema(users, {
   firstName: (schema) => schema.firstName.max(64),
   lastName: (schema) => schema.lastName.max(64),
   email: (schema) => schema.email.email().toLowerCase(),
-  image: (schema) => schema.image.url().nullable(),
 })
   .pick({
     firstName: true,

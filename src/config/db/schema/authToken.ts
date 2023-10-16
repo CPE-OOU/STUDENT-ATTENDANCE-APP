@@ -7,11 +7,15 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 import { users } from '.';
+import { accessGrantAction } from './access-grant';
 
 export const authAction = pgEnum('auth_action', [
   'account-verify',
   'reset-password',
+  ...accessGrantAction.enumValues,
 ]);
+
+export type AuthAction = (typeof authAction.enumValues)[number];
 
 export const authTokens = pgTable(
   'auth_tokens',
@@ -26,7 +30,7 @@ export const authTokens = pgTable(
       mode: 'date',
       withTimezone: true,
     }).notNull(),
-
+    userIp: varchar('user_ip', { length: 16 }),
     createdAt: timestamp('created_at', {
       mode: 'date',
       withTimezone: true,
