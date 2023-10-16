@@ -5,6 +5,7 @@ interface UseGlobalState {
   authRedirectUrl?: string | null;
   accountVerifyTokenLength?: number;
   setAccountVerifyTokenLength: (length: number) => void;
+
   tokenResendTrialTime?: { value: number; type: 's' | 'm' };
   setResendTrialTime: (trial: { value: number; type: 's' | 'm' }) => void;
   setRedirectUrl: (url?: null | string) => void;
