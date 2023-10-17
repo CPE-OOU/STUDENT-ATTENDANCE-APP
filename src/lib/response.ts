@@ -10,7 +10,7 @@ interface APIResourceAction {
 type ServerResponsePayload = {
   success: boolean;
   title: string;
-  message: string;
+  message?: string;
   data?: unknown;
   error?: unknown;
   actions?: Array<APIResourceAction>;
@@ -19,7 +19,7 @@ type ServerResponsePayload = {
 interface SuccessServerResponsePayload<Resource = unknown>
   extends ServerResponsePayload {
   success: true;
-  data: Resource;
+  data?: Resource;
 }
 
 interface FailedServerResponsePayload extends ServerResponsePayload {
