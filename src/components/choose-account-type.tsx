@@ -14,11 +14,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { toast } from 'sonner';
 import { Avatar } from './ui/avatar';
-import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
-import Image from 'next/image';
-// import { accountType } from '@/config/db/schema';
+import { AvatarImage } from '@radix-ui/react-avatar';
 
 const FormSchema = z.object({
   type: z.enum(['student', 'teacher']),
