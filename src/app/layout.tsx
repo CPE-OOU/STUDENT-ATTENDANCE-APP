@@ -3,6 +3,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 import createLocalFont from 'next/font/local';
 import { ToastProvider } from '@/providers/toast';
+import { getSession } from 'next-auth/react';
+import { AuthSessionProvider } from '@/providers/session';
 
 const font = createLocalFont({
   src: [
@@ -49,16 +51,21 @@ export const metadata: Metadata = {
   description: 'Capture student attendance using modern technology',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getSession();
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={font.className}>
         <ToastProvider />
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          <AuthSessionProvider session={session}>
+            {children}
+          </AuthSessionProvider>
+        </QueryProvider>
       </body>
     </html>
   );
