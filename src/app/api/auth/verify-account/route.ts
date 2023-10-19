@@ -1,6 +1,6 @@
 import { db } from '@/config/db/client';
 import { users } from '@/config/db/schema';
-import { object, enum as enum_, ZodError, string } from 'zod';
+import { object, ZodError, string } from 'zod';
 import { NextResponse } from 'next/server';
 
 import { createFailResponse, createSuccessResponse } from '@/lib/response';
@@ -8,7 +8,7 @@ import { createInvalidPayloadResponse } from '@/lib/utils';
 import { TOKEN_LENGTH } from '@/lib/constant';
 import { getCurrentUser } from '@/lib/auth';
 import { authTokens } from '@/config/db/schema/authToken';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, getTableColumns } from 'drizzle-orm';
 import { StatusCodes } from 'http-status-codes';
 
 const requestDataValidator = object({
@@ -46,7 +46,10 @@ export const POST = async (req: Request) => {
       );
 
     const [tokenRecord] = await db
-      .select()
+      .select({
+        ...getTableColumns(authTokens),
+        expired: sql<boolean>`CURRENT_TIMESTAMP < ${authTokens.expiresIn}`,
+      })
       .from(authTokens)
       .where(
         sql`
@@ -57,7 +60,6 @@ export const POST = async (req: Request) => {
       );
 
     if (!tokenRecord) {
-      console.log('good');
       return createFailResponse(
         {
           title: 'INVALID TOKEN',
@@ -68,7 +70,7 @@ export const POST = async (req: Request) => {
       );
     }
 
-    if (new Date(tokenRecord.expiresIn) < new Date()) {
+    if (tokenRecord.expired) {
       await db.delete(authTokens).where(eq(authTokens.id, tokenRecord.id));
       return createFailResponse(
         {
