@@ -14,7 +14,6 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   if (isPathProtected) {
     const token = await getToken({ req });
-    console.log(token);
     if (!token) {
       const url = new URL(`/sign-in`, req.url);
       url.searchParams.set('callbackUrl', pathname);

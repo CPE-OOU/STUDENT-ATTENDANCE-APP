@@ -13,10 +13,8 @@ export default {
     container: {
       center: true,
       padding: '1.5rem',
-      // screens: {
-      //   '2xl': '1400px',
-      // },
     },
+
     extend: {
       colors: {
         primary: '#FDCB9E',
