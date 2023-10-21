@@ -15,7 +15,6 @@ const options: NextAuthOptions = {
         password: { type: 'password', label: 'password' },
       },
       async authorize(credentials) {
-        console.log(credentials);
         if (!(credentials?.email && credentials.password)) {
           throw new Error(
             'Missing login credential email or password field missing'
@@ -26,7 +25,6 @@ const options: NextAuthOptions = {
           .from(users)
           .where(eq(users.email, credentials!.email));
 
-        console.log({ user });
         if (!user) {
           throw Error('User credential not a match. Check email or password');
         }
@@ -39,7 +37,7 @@ const options: NextAuthOptions = {
   session: { strategy: 'jwt' },
   jwt: { maxAge: 60 * 60 * 24 * 30 },
   debug: process.env.NODE_ENV === 'development',
-  pages: { signIn: '/auth/sign-in', error: '/', signOut: '/auth/logout' },
+  pages: { signIn: '/', signOut: '/sign-in' },
 };
 
 const handler = NextAuth(options);

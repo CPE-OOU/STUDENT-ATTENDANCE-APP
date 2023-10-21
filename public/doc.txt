@@ -1,1 +1,39 @@
 https://reacthustle.com/blog/nextjs-redirect-after-login?expand_article=1
+
+To model Access Control Lists (ACLs) on a database level, you need to design tables and relationships that allow you to store information about resources, subjects, permissions, and ACL entries. Here's a simplified example of how you might model ACLs in a relational database:
+
+1. **Resource Table:**
+   - This table stores information about the resources you want to control access to. Each resource is uniquely identified by a resource ID.
+   - Fields: ResourceID (Primary Key), ResourceType, ResourceName, Description, ...
+
+2. **Subject Table:**
+   - This table contains information about the subjects, which could be users or groups. Subjects are uniquely identified by a subject ID.
+   - Fields: SubjectID (Primary Key), SubjectType (User or Group), SubjectName, Description, ...
+
+3. **Permission Table:**
+   - This table stores the available permissions that can be granted or denied.
+   - Fields: PermissionID (Primary Key), PermissionName, Description, ...
+
+4. **ACL Entry Table:**
+   - This is the central table that links resources, subjects, and permissions.
+   - Fields: 
+     - ResourceID (Foreign Key referencing Resource Table)
+     - SubjectID (Foreign Key referencing Subject Table)
+     - PermissionID (Foreign Key referencing Permission Table)
+     - PermissionStatus (Granted or Denied)
+
+In this simplified model, each ACL entry represents a specific permission status (e.g., granted or denied) for a particular subject on a specific resource. The combination of ResourceID, SubjectID, and PermissionID uniquely identifies an entry.
+
+You can add more fields to the ACL Entry Table to capture additional information, such as timestamps, comments, or auditing data.
+
+Here's how you can use this database model:
+
+- When a user or group needs access to a resource, you create an ACL entry in the ACL Entry Table, specifying the ResourceID, SubjectID, PermissionID, and the PermissionStatus (granted or denied).
+
+- To check whether a subject has access to a resource for a specific action, you query the ACL Entry Table for entries that match the ResourceID, SubjectID, and the PermissionID you're interested in.
+
+- To enforce access control, you compare the results of the query to determine if access is allowed or denied.
+
+- You can also implement inheritance by linking resources hierarchically. For example, a directory resource could inherit permissions from its parent directory.
+
+Remember that in a real-world scenario, this model would likely be more complex, especially in large and security-sensitive systems. You might need additional tables to handle roles, groups, user memberships, and auditing. Additionally, you should ensure that your database design aligns with your specific application's requirements and security policies, and consider implementing additional security measures such as encryption and access control at the database level.

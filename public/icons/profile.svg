@@ -1,0 +1,16 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group 262">
+<circle id="Ellipse 101" cx="80" cy="80" r="79" stroke="#FAFAFA" stroke-width="2"/>
+<g id="Group 81">
+<circle id="Ellipse 102" cx="80.0015" cy="59.9996" r="28" fill="#F7F7F7"/>
+</g>
+<g id="Mask group">
+<mask id="mask0_186_570" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="160" height="160">
+<circle id="Ellipse 102_2" cx="80" cy="80" r="79" fill="#F7F7F7" stroke="#FAFAFA" stroke-width="2"/>
+</mask>
+<g mask="url(#mask0_186_570)">
+<rect id="Rectangle 276" x="24" y="98.2856" width="112" height="112" rx="56" fill="#F7F7F7"/>
+</g>
+</g>
+</g>
+</svg>
