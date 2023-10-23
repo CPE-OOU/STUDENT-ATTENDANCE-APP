@@ -73,3 +73,7 @@ export const userAsStudentFormSchema = object({
 
 export type UserAsLecturerFormData = TypeOf<typeof userAsLecturerFormSchema>;
 export type UserAsStudentFormData = TypeOf<typeof userAsStudentFormSchema>;
+
+export type SetupProfileFormData =
+  | UserAsLecturerFormData
+  | UserAsStudentFormData;

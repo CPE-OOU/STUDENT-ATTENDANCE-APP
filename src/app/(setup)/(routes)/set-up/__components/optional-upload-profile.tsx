@@ -70,7 +70,10 @@ export const OptionalUploadProfile: React.FC<OptionalUploadProfileProps> = ({
           data: { url },
           title,
           message,
-        }: SuccessServerResponsePayload<{ url: string }> = await res.json();
+        }: SuccessServerResponsePayload<
+          { url: string },
+          false
+        > = await res.json();
         setURL(url);
         setFile(null);
         toast.success(title, { description: message });

@@ -16,18 +16,22 @@ type ServerResponsePayload = {
   actions?: Array<APIResourceAction>;
 };
 
-interface SuccessServerResponsePayload<Resource = unknown>
-  extends ServerResponsePayload {
+type SuccessServerResponsePayload<
+  Resource = unknown,
+  Optional = false
+> = ServerResponsePayload & {
   success: true;
-  data?: Resource;
-}
+} & (Optional extends true ? { data?: Resource } : { data: Resource });
 
 interface FailedServerResponsePayload extends ServerResponsePayload {
   success: false;
 }
 
 const createSuccessResponse = <const Payload = unknown>(
-  response: Omit<SuccessServerResponsePayload<Payload>, 'success' | 'error'>,
+  response: Omit<
+    SuccessServerResponsePayload<Payload, true>,
+    'success' | 'error'
+  >,
   status: number
 ) => NextResponse.json({ success: true, ...response }, { status });
 

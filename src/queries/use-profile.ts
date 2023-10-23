@@ -23,7 +23,10 @@ export const useProfile = (enabled = true) => {
     queryKey: ['user-profile'],
     queryFn: async () => {
       const { data } = await axios.get<
-        SuccessServerResponsePayload<ClientUser & { setting: AccountSetting }>
+        SuccessServerResponsePayload<
+          ClientUser & { setting: AccountSetting },
+          false
+        >
       >('/api/profile');
 
       return data;

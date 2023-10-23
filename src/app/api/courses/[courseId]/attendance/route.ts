@@ -232,6 +232,7 @@ export const POST = async (req: Request, param: unknown) => {
       .values({
         lecturerAttendeeId: user.lecturer!.id,
         topicTitle,
+        courseId,
         expires,
       })
       .returning();
