@@ -5,7 +5,7 @@ export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
 
-export const runtime = 'node';
+export const runtime = 'nodejs';
 
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
