@@ -8,11 +8,14 @@ const currentPageSearchParams = searchParamsSchema.and(
   })
 );
 
-const CourseAttendancePage = (req: Request) => {
+const CourseAttendancePage = ({
+  searchParams,
+}: {
+  searchParams: { [query: string]: unknown };
+}) => {
   try {
-    const { offset, courseId, per_page } = currentPageSearchParams.parse(
-      getUrlQuery(req.url)
-    );
+    const { offset, courseId, per_page } =
+      currentPageSearchParams.parse(searchParams);
   } catch (e) {}
   return <div></div>;
 };
