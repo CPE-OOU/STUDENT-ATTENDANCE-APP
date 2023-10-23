@@ -5,7 +5,7 @@ export type UniversityItem = {
   website: string;
 };
 
-export const universities = [
+export const universities: Array<UniversityItem> = [
   {
     name: 'Abubakar Tafawa Balewa University, Bauchi',
     address: 'Ahmadu Bello Way, Bauchi',
@@ -1043,4 +1043,4 @@ export const universities = [
     type: 'Private',
     website: '',
   },
-] as const satisfies Array<UniversityItem>;
+];
