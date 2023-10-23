@@ -1,3 +1,4 @@
+import { NextApiRequest } from 'next';
 import { getToken } from 'next-auth/jwt';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -7,8 +8,8 @@ export const config = {
 
 export const runtime = 'nodejs';
 
-export async function middleware(req: NextRequest) {
-  const pathname = req.nextUrl.pathname;
+export async function middleware(req: NextApiRequest) {
+  const pathname = new URL(req.url!).pathname;
   const protectedPaths = ['/admin', '/dashboard'];
   const isPathProtected = protectedPaths?.some((path) =>
     pathname.includes(path)
