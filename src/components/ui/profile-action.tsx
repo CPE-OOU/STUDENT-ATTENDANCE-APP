@@ -1,6 +1,7 @@
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -10,22 +11,17 @@ import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 import Image from 'next/image';
 import { ClientUser } from '@/lib/auth';
 import { usePathname } from 'next/navigation';
-import { routeIsActive } from '@/lib/utils';
+import { signOut } from 'next-auth/react';
 interface ProfileActionProps {
   user: ClientUser;
 }
 
 export const ProfileAction: React.FC<ProfileActionProps> = ({
-  user: { imageUrl, firstName, lastName, type },
+  user: { imageUrl, firstName, lastName, type, email },
 }) => {
-  const pathName = usePathname();
-  const accountPathActive = routeIsActive({
-    currentRoute: '/account',
-    activeRoute: pathName,
-  });
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
+      <DropdownMenuTrigger className="outline-none">
         <div className="flex gap-x-4 items-center">
           <div>
             <Avatar className="bg-[#F7F7F7] w-16 h-16 rounded-full flex justify-center items-center">
@@ -52,17 +48,23 @@ export const ProfileAction: React.FC<ProfileActionProps> = ({
           </div>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        {!accountPathActive ? (
-          <>
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-          </>
-        ) : null}
-        <DropdownMenuItem>Change Email</DropdownMenuItem>
-        <DropdownMenuItem>Change Password</DropdownMenuItem>
+      <DropdownMenuContent className="w-56 bg-white" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{firstName}</p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {email}
+            </p>
+          </div>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Logout</DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem>Profile</DropdownMenuItem>
+          <DropdownMenuItem>Attedance</DropdownMenuItem>
+          <DropdownMenuItem>Courses</DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => signOut()}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
