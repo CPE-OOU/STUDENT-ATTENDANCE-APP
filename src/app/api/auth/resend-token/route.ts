@@ -67,6 +67,25 @@ export const POST = async (req: Request) => {
     }
 
     const clientIP = getClientIp(req as unknown as ExpressRequest);
+    console.log(
+      db
+        .select()
+        .from(authTokens)
+        .where(
+          sql`
+        ${authTokens.userId} = ${user.id} 
+        AND ${authTokens.action} = ${type}
+        AND ${authTokens.userIp} = ${clientIP}
+        ${
+          type === 'change-email'
+            ? sql`(SELECT ${otpChangeFields.tokenId} FROM ${otpChangeFields} 
+              WHERE ${otpChangeFields.id} = ${changeFieldId} LIMIT 1) = ${authTokens.id} `
+            : sql``
+        }
+        `
+        )
+        .toSQL().sql
+    );
 
     const [tokenRecord] = await db
       .select()
@@ -80,7 +99,7 @@ export const POST = async (req: Request) => {
           type === 'change-email'
             ? sql`(SELECT ${otpChangeFields.tokenId} FROM ${otpChangeFields} 
               WHERE ${otpChangeFields.id} = ${changeFieldId} LIMIT 1) = ${authTokens.id} `
-            : ''
+            : sql``
         }
         `
       );
