@@ -7,13 +7,14 @@ import { useGlobalState } from '@/hooks/use-global-state';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { ZodString, object, string } from 'zod';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { ResendCode } from './resend-count';
 import { useForceUpdate } from '@/hooks/use-force-update';
 import { useVerifyAccountMutation } from '@/mutations/use-verify-account';
 import { useRouter } from 'next/navigation';
 import { VerifyAccountSearchParams } from '@/lib/validations/params';
+import { useResendAuthToken } from '@/queries/use-resend-auth';
 type AuthCodeBox = { [K in `code-${number}`]: ZodString };
 
 function generateCodeBoxDefaults<T>(length: number, fn: () => T) {
@@ -31,11 +32,17 @@ export const VerifyAccountForm: React.FC<VerifyAccountFormProps> = ({
   autoRequestToken,
   type,
 }) => {
-  const { accountVerifyTokenLength = 4 } = useGlobalState(
-    ({ accountVerifyTokenLength }) => ({
-      accountVerifyTokenLength,
-    })
+  console.log({ autoRequestToken });
+  const [clientForwardOtpRequest, setClientForwatdOtpRequest] = useState(
+    autoRequestToken ?? false
   );
+  const { accountVerifyTokenLength = 4, setAccountVerifyTokenLength } =
+    useGlobalState(
+      ({ accountVerifyTokenLength, setAccountVerifyTokenLength }) => ({
+        accountVerifyTokenLength,
+        setAccountVerifyTokenLength,
+      })
+    );
 
   const forceUpdate = useForceUpdate();
 
@@ -52,8 +59,16 @@ export const VerifyAccountForm: React.FC<VerifyAccountFormProps> = ({
     defaultValues: generateCodeBoxDefaults(accountVerifyTokenLength, () => ''),
   });
 
-  const { mutate, isLoading, isSuccess } = useVerifyAccountMutation();
+  const { mutate, isLoading, isSuccess } = useVerifyAccountMutation(
+    `${type}-confirm`
+  );
   const router = useRouter();
+  const {
+    isLoading: autoTokenRequestLoading,
+    data,
+    mutateAsync,
+  } = useResendAuthToken();
+
   const formData = form.getValues();
   const formDigitFields = Object.keys(formData).sort();
   const lastFilledDigitFieldIndex = formDigitFields.findLastIndex(
@@ -68,6 +83,18 @@ export const VerifyAccountForm: React.FC<VerifyAccountFormProps> = ({
     }
   }, [isSuccess]);
 
+  useEffect(() => {
+    if (clientForwardOtpRequest) {
+      mutateAsync({ type })
+        .then((data) => {
+          setAccountVerifyTokenLength(data.formFieldLength);
+        })
+        .finally(() => {
+          setClientForwatdOtpRequest(false);
+        });
+    }
+  }, []);
+
   return (
     <div className="w-[408px] h-[192px] ">
       <Form {...form}>
@@ -78,6 +105,7 @@ export const VerifyAccountForm: React.FC<VerifyAccountFormProps> = ({
                 .sort()
                 .map((key) => data[key])
                 .join(''),
+              type,
             })
           )}
         >
@@ -193,7 +221,11 @@ export const VerifyAccountForm: React.FC<VerifyAccountFormProps> = ({
         </form>
       </Form>
       <div className="w-[274px]">
-        <ResendCode />
+        <ResendCode
+          retryAfter={data?.retryAfter}
+          stopTimer={autoTokenRequestLoading}
+          type={type}
+        />
       </div>
     </div>
   );

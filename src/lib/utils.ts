@@ -7,7 +7,7 @@ import { classifyErrorType } from './validator';
 import { getInvalidQueryParamsResponse } from './response';
 import { ZodError } from 'zod';
 import { AuthToken } from '@/config/db/schema';
-import { addMinutes } from 'date-fns';
+import { addMinutes, differenceInMinutes, subMinutes } from 'date-fns';
 import {
   SQL,
   sql,
@@ -54,9 +54,10 @@ export function evaluateAuthToken(
   return {
     expired: new Date(token.expiresIn).getTime() < Date.now(),
     allowResend:
-      currentIp === token.userIp &&
-      new Date(token.createdAt!).getTime() <
-        addMinutes(new Date(), TOKEN_EXPIRES_MIN).getTime(),
+      Math.max(
+        differenceInMinutes(token.createdAt!, new Date().getTime()),
+        0
+      ) === 0,
   };
 }
 

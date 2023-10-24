@@ -32,7 +32,7 @@ export const studentFilterSearchParams = z.object({
 
 export const verifyAccountSearchParams = z.object({
   mode: z.enum(['request']).optional(),
-  type: z.enum(['account-verify', 'reset-password']),
+  type: z.enum(['account-verify', 'reset-password']).default('account-verify'),
 });
 
 export type VerifyAccountSearchParams = z.TypeOf<

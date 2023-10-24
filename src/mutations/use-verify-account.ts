@@ -3,17 +3,27 @@ import {
   FailedServerResponsePayload,
   SuccessServerResponsePayload,
 } from '@/lib/response';
+import { VerifyAccountSearchParams } from '@/lib/validations/params';
 import { useMutation } from '@tanstack/react-query';
 import axios, { AxiosError } from 'axios';
 import { toast } from 'sonner';
 
-export const useVerifyAccountMutation = () =>
+export const useVerifyAccountMutation = (
+  type: `${VerifyAccountSearchParams['type']}-confirm`
+) =>
   useMutation({
     retry: false,
-    mutationFn: async ({ token }: { token: string }) => {
+    mutationKey: [type],
+    mutationFn: async ({
+      token,
+      type,
+    }: {
+      token: string;
+      type: VerifyAccountSearchParams['type'];
+    }) => {
       const { data: responseData } = await axios.post<
         SuccessServerResponsePayload<User>
-      >('/api/auth/verify-account', { token });
+      >('/api/auth/verify-account', { token, type });
 
       const { data, title, message, actions } = responseData;
 

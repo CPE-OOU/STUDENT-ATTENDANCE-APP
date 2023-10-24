@@ -6,8 +6,6 @@ interface UseGlobalState {
   accountVerifyTokenLength?: number;
   setAccountVerifyTokenLength: (length: number) => void;
 
-  tokenResendTrialTime?: { value: number; type: 's' | 'm' };
-  setResendTrialTime: (trial: { value: number; type: 's' | 'm' }) => void;
   setRedirectUrl: (url?: null | string) => void;
   setInitialRegTeacherClassSetup: (status: boolean) => void;
 }
@@ -22,10 +20,6 @@ const useGlobalState = create<UseGlobalState>((set) => ({
   },
   setAccountVerifyTokenLength(length) {
     set({ accountVerifyTokenLength: length });
-  },
-
-  setResendTrialTime(trial) {
-    set({ tokenResendTrialTime: trial });
   },
 }));
 

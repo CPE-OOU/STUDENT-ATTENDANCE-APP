@@ -10,15 +10,18 @@ import { getCurrentUser } from '@/lib/auth';
 import { authTokens } from '@/config/db/schema/authToken';
 import { eq, sql, getTableColumns } from 'drizzle-orm';
 import { StatusCodes } from 'http-status-codes';
+import { verifyAccountSearchParams } from '@/lib/validations/params';
 
 const requestDataValidator = object({
-  body: object({ token: string().length(TOKEN_LENGTH) }),
+  body: object({ token: string().length(TOKEN_LENGTH) }).and(
+    verifyAccountSearchParams.pick({ type: true })
+  ),
 });
 
 export const POST = async (req: Request) => {
   try {
     const {
-      body: { token },
+      body: { token, type },
     } = requestDataValidator.parse({
       body: await req.json(),
     });
@@ -48,16 +51,18 @@ export const POST = async (req: Request) => {
     const [tokenRecord] = await db
       .select({
         ...getTableColumns(authTokens),
-        expired: sql<boolean>`CURRENT_TIMESTAMP < ${authTokens.expiresIn}`,
+        expired: sql<boolean>`${authTokens.expiresIn} < CURRENT_TIMESTAMP`,
       })
       .from(authTokens)
       .where(
         sql`
         ${authTokens.userId} = ${user.id} 
         AND ${authTokens.token} = ${token}
-        AND ${authTokens.action} = 'account-verify'
+        AND ${authTokens.action} = ${type}
     `
       );
+
+    console.log({ tokenRecord });
 
     if (!tokenRecord) {
       return createFailResponse(

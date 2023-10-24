@@ -1,5 +1,5 @@
 import { db } from '@/config/db/client';
-import { otpChangeFields } from '@/config/db/schema';
+import { otpChangeFields, users } from '@/config/db/schema';
 import { object, enum as enum_, ZodError, string } from 'zod';
 import { NextResponse } from 'next/server';
 import { createFailResponse, createSuccessResponse } from '@/lib/response';
@@ -16,7 +16,7 @@ import { Request as ExpressRequest, getClientIp } from 'request-ip';
 import { generateOTP } from '@/lib/otp-generate';
 import { novuNotification } from '@/lib/nov.notification';
 import { parsedEnv } from '@/config/env/validate';
-import { format } from 'date-fns';
+import { differenceInMinutes, format } from 'date-fns';
 const requestDataValidator = object({
   query: object({
     type: enum_(authAction.enumValues),
@@ -78,7 +78,6 @@ export const POST = async (req: Request) => {
         sql`
         ${authTokens.userId} = ${user.id} 
         AND ${authTokens.action} = ${type}
-        AND ${authTokens.userIp} = ${clientIP}
         ${
           type === 'change-email'
             ? sql`(SELECT ${otpChangeFields.tokenId} FROM ${otpChangeFields} 
@@ -103,7 +102,13 @@ export const POST = async (req: Request) => {
           StatusCodes.EXPECTATION_FAILED
         );
       }
+      await db
+        .delete(authTokens)
+        .where(
+          sql`${authTokens.token} = ${tokenRecord.token} AND ${user.id} = ${users.id}`
+        );
     }
+
     let token;
     if (type === 'change-email') {
       await db.transaction(async (tx) => {
@@ -120,7 +125,10 @@ export const POST = async (req: Request) => {
             payload: {
               otp: token.token,
               companyName: 'GURU',
-              expiresAt: new Date().toISOString(),
+              expiresAt: `${differenceInMinutes(
+                token.expiresIn,
+                new Date()
+              ).toString()} minutes`,
             },
           }),
         ]);
