@@ -6,7 +6,9 @@ interface GainAccessPageLayout {
   query: {};
 }
 
-const AuthPageLayout: React.FC<GainAccessPageLayout> = async (context) => {
+const GainAccessLayoutPage: React.FC<GainAccessPageLayout> = async (
+  context
+) => {
   const { children } = context;
   const user = await getCurrentUser();
 
@@ -15,4 +17,4 @@ const AuthPageLayout: React.FC<GainAccessPageLayout> = async (context) => {
   return <>{children}</>;
 };
 
-export default AuthPageLayout;
+export default GainAccessLayoutPage;
