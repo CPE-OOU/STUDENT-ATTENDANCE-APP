@@ -1,5 +1,10 @@
 import { db } from '@/config/db/client';
-import { accountSettings, students, users } from '@/config/db/schema';
+import {
+  accountSettings,
+  lecturers,
+  students,
+  users,
+} from '@/config/db/schema';
 import { getCurrentUser } from '@/lib/auth';
 import { createFailResponse, createSuccessResponse } from '@/lib/response';
 import { createInvalidPayloadResponse } from '@/lib/utils';
@@ -123,12 +128,14 @@ export const PATCH = async (req: Request) => {
           type: users.type,
           emailVerified: users.emailVerified,
           imageUrl: users.imageUrl,
+          lecturer: getTableColumns(lecturers),
           setting: getTableColumns(accountSettings),
           createdAt: users.createdAt,
           updatedAt: users.updatedAt,
         })
         .from(users)
-        .innerJoin(accountSettings, eq(accountSettings.userId, user.id));
+        .innerJoin(accountSettings, eq(accountSettings.userId, user.id))
+        .innerJoin(lecturers, eq(lecturers.userId, users.id));
     }
 
     return createSuccessResponse(
