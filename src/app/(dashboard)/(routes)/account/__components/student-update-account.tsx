@@ -1,6 +1,6 @@
 'use client';
 
-import { clientCreateNewUserValidator } from '@/app/(auth)/(routes)/sign-up/__components/form';
+import { clientCreateNewUserValidator } from '@/app/(auth)/(routes)/(gain-access)/sign-up/__components/form';
 import { studentProfileFormSchema } from '@/app/(setup)/(routes)/set-up/__validator/set-up-validator';
 import { ClientUser } from '@/lib/auth';
 import { TypeOf, object, string } from 'zod';

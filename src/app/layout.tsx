@@ -59,6 +59,21 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
+  const user = await getCurrentUser();
+
+  if (user) {
+    if (!user.emailVerified) {
+      return redirect('/verify-account?mode=request&type=account-verify');
+    }
+
+    if (
+      !user.setting.setupCompleted ||
+      (user.setting.setupCompleted && !(user.student || user.lecturer))
+    ) {
+      return redirect('/set-up');
+    }
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={font.className}>
