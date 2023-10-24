@@ -5,6 +5,8 @@ import createLocalFont from 'next/font/local';
 import { ToastProvider } from '@/providers/toast';
 import { getSession } from 'next-auth/react';
 import { AuthSessionProvider } from '@/providers/session';
+import { getCurrentUser } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 const font = createLocalFont({
   src: [

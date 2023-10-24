@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useResendAuthToken } from '@/queries/use-resend-auth';
 import { addMinutes, addSeconds } from 'date-fns';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTimer } from 'react-timer-hook';
 import { toast } from 'sonner';
 
@@ -35,13 +35,18 @@ export function ResendCode() {
 
   const { isLoading, mutateAsync } = useResendAuthToken();
   const router = useRouter();
+  const [clientForwardOtpRequest, setClientForwatdOtpRequest] = useState(
+    mode === 'request'
+  );
+
   const { minutes, seconds, isRunning, restart } = useTimer({
     expiryTimestamp: endRetryCode,
     autoStart: mode !== 'request',
   });
 
   useEffect(() => {
-    if (mode === 'request') {
+    if (clientForwardOtpRequest) {
+      setClientForwatdOtpRequest(false);
       mutateAsync({ type })
         .then(({ formFieldLength, retryAfter }) => {
           setAccountVerifyTokenLength(formFieldLength);
@@ -67,7 +72,8 @@ export function ResendCode() {
         disabled={isRunning || isLoading}
         className={cn(
           'font-semibold text-[#fdcb9e] underline',
-          isRunning && 'disabled:opacity-70'
+          isRunning && 'disabled:opacity-70',
+          clientForwardOtpRequest && 'hidden'
         )}
         onClick={async (event) => {
           event.preventDefault();
@@ -82,7 +88,10 @@ export function ResendCode() {
         Resend now
       </Button>
       <span
-        className={cn('font-medium text-slate-400', !isRunning && 'opacity-0')}
+        className={cn(
+          'font-medium text-slate-400',
+          (clientForwardOtpRequest || !isRunning) && 'hidden'
+        )}
       >
         {`${minutes}:${seconds.toString().padStart(2, '0')}`}
       </span>

@@ -6,19 +6,9 @@ import {
 } from '@/lib/response';
 import { useQuery } from '@tanstack/react-query';
 import axios, { AxiosError } from 'axios';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export const useProfile = (enabled = true) => {
-  const router = useRouter();
-  // useSession({
-  //   required: true,
-  //   onUnauthenticated: () => {
-  //     const url = new URL(window.location.href);
-  //     router.push(`/sign-in?callbackUrl=${url.pathname}?${url.searchParams}`);
-  //   },
-  // });
   const query = useQuery({
     queryKey: ['user-profile'],
     queryFn: async () => {

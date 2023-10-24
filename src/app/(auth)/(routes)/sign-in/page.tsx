@@ -63,22 +63,24 @@ export default function SigninPage() {
         ...formData,
       });
 
-      const { data: userData } = await refetch();
+      const { data, isError } = await refetch();
+      if (!isError) return;
+
       form.reset();
       toast.success('Welcome back. Login successful', { duration: 2000 });
-      if (!userData) {
-        return router.refresh();
-      }
-      const userMailVerified = !!userData.data.emailVerified;
-      let redirectUrl = !userMailVerified
-        ? '/verify-account?mode=request&type=account-verify'
-        : !userData.data.setting.setupCompleted
-        ? '/set-up'
-        : authRedirectUrl ?? '/dashboard';
+      if (!data) throw new Error('An error occured');
 
-      return setTimeout(() => {
-        router.push(redirectUrl);
-      }, 1000);
+      const { data: userData } = data;
+
+      if (!userData.emailVerified) {
+        router.push('/verify-account?mode=request&type=account-verify');
+      } else if (userData.setting.setupCompleted) {
+        if (userData.student || userData.lecturer) {
+          return router.push('/set-up');
+        }
+
+        return router.push('/dashboard');
+      }
     } catch (e) {
       if (Object(e) === e && e instanceof Error) {
         if (!/internal/i.test(e.message)) {

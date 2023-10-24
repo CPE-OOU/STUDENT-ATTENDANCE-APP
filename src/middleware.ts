@@ -1,6 +1,6 @@
 import { NextApiRequest } from 'next';
 import { getToken } from 'next-auth/jwt';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
