@@ -13,6 +13,7 @@ import { ResendCode } from './resend-count';
 import { useForceUpdate } from '@/hooks/use-force-update';
 import { useVerifyAccountMutation } from '@/mutations/use-verify-account';
 import { useRouter } from 'next/navigation';
+import { VerifyAccountSearchParams } from '@/lib/validations/params';
 type AuthCodeBox = { [K in `code-${number}`]: ZodString };
 
 function generateCodeBoxDefaults<T>(length: number, fn: () => T) {
@@ -21,7 +22,15 @@ function generateCodeBoxDefaults<T>(length: number, fn: () => T) {
   );
 }
 
-export const VerifyAccountForm = () => {
+interface VerifyAccountFormProps {
+  autoRequestToken?: boolean;
+  type: VerifyAccountSearchParams['type'];
+}
+
+export const VerifyAccountForm: React.FC<VerifyAccountFormProps> = ({
+  autoRequestToken,
+  type,
+}) => {
   const { accountVerifyTokenLength = 4 } = useGlobalState(
     ({ accountVerifyTokenLength }) => ({
       accountVerifyTokenLength,

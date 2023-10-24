@@ -1,25 +1,37 @@
-'use client';
 import { Banner } from '@/components/banner';
 import { VerifyAccountForm } from './__component/verify-form';
-import { useEffect, useState } from 'react';
-import { useProfile } from '@/queries/use-profile';
-import { useRouter } from 'next/navigation';
 
-export default function VerifyEmailPage() {
-  const [mounted, setMounted] = useState(false);
-  const router = useRouter();
-  const { isLoading, data, error } = useProfile();
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth';
+import {
+  VerifyAccountSearchParams,
+  verifyAccountSearchParams,
+} from '@/lib/validations/params';
+import { db } from '@/config/db/client';
+import { authTokens } from '@/config/db/schema';
+import { sql } from 'drizzle-orm';
 
-  if (isLoading) return null;
+interface VerifyEmailPageProps {
+  searchParams: VerifyAccountSearchParams;
+}
 
-  if (error) throw error;
-
-  if (data?.data.emailVerified) {
-    return router.push('/dashboard');
+export default async function VerifyEmailPage({
+  searchParams,
+}: VerifyEmailPageProps) {
+  const user = (await getCurrentUser())!;
+  let params: typeof searchParams;
+  try {
+    params = verifyAccountSearchParams.parse(searchParams);
+  } catch (e) {
+    params = { type: 'account-verify' };
   }
+
+  const { mode, type } = params;
+  await db
+    .delete(authTokens)
+    .where(
+      sql`${authTokens.expiresIn} < CURRENT_TIMESTAMP AND ${authTokens.userId} = ${user.id}`
+    );
 
   return (
     <div className="p-6 flex h-full w-full gap-x-[72px] rounded-3xl">
@@ -37,7 +49,10 @@ export default function VerifyEmailPage() {
               Please enter the verification code we sent to your email address
             </div>
           </div>
-          <div>{mounted ? <VerifyAccountForm /> : null}</div>
+          <VerifyAccountForm
+            autoRequestToken={mode === 'request'}
+            type={type}
+          />
         </div>
       </div>
     </div>

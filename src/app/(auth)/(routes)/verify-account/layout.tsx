@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 
 interface VerifyLayoutPage {
   children: React.ReactNode;
-  query: {};
 }
 
 const VerifyLayoutPage: React.FC<VerifyLayoutPage> = async (context) => {

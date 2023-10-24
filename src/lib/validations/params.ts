@@ -29,3 +29,12 @@ export const studentFilterSearchParams = z.object({
   name: z.string().optional(),
   title: z.string().optional(),
 });
+
+export const verifyAccountSearchParams = z.object({
+  mode: z.enum(['request']).optional(),
+  type: z.enum(['account-verify', 'reset-password']),
+});
+
+export type VerifyAccountSearchParams = z.TypeOf<
+  typeof verifyAccountSearchParams
+>;

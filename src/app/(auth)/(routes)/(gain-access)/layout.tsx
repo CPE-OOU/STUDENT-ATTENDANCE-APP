@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 
 interface GainAccessPageLayout {
   children: React.ReactNode;
-  query: {};
 }
 
 const GainAccessLayoutPage: React.FC<GainAccessPageLayout> = async (
