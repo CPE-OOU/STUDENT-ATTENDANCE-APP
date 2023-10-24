@@ -78,8 +78,7 @@ export default function SigninPage() {
         if (userData.student || userData.lecturer) {
           return router.push('/set-up');
         }
-
-        return router.push('/dashboard');
+        return router.push(authRedirectUrl ?? '/');
       }
     } catch (e) {
       if (Object(e) === e && e instanceof Error) {
