@@ -2,11 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Archive, Library, User2 } from 'lucide-react';
 import { SideAction } from '../../../account/__components/side-action';
 import { ClientUser } from '@/lib/auth';
-import { db } from '@/config/db/client';
-import { sql } from 'drizzle-orm';
-import { attendances, courses, lecturerAttendees } from '@/config/db/schema';
-import postgres from 'postgres';
-// import { Overview } from './overview';
+
 import { RecentAttendance } from '../recent-attendance';
 
 interface StudentDashboardProps {
@@ -47,26 +43,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = async ({
     },
   ];
 
-  // const graphData = (await db.execute(sql`
-  //        SELECT ${courses.id},${courses.courseCode} as "courseCode", ${
-  //   courses.name
-  // }, count(*) as "attendanceNo"  FROM ${courses}
-  //         LEFT JOIN ${attendances} ON ${attendances.courseId} = ${courses.id}
-  //         WHERE ${courses.id} in (
-  //         SELECT ${lecturerAttendees.courseId} FROM ${lecturerAttendees}
-  //         WHERE ${lecturerAttendees.lecturerId} = ${user.lecturer!.id}
-  //         )
-  //         GROUP BY ${courses.id}
-
-  // `)) as postgres.RowList<
-  //   Array<{
-  //     id: string;
-  //     courseCode: string;
-  //     name: string;
-  //     attendanceNo: number;
-  //   }>
-  // >;
-
   return (
     <div>
       <div className="flex">
@@ -99,14 +75,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = async ({
           </div>
         </div>
         <div className="flex-shrink-0 w-[480px] ">
-          {/* <SideAction
-            user={user}
-            sideAreaComponent={
-              <div>
-                <RecentAttendance />
-              </div>
-            }
-          /> */}
+          <SideAction user={user} />
         </div>
       </div>
     </div>

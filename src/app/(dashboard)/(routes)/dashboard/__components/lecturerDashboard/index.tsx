@@ -8,6 +8,7 @@ import { attendances, courses, lecturerAttendees } from '@/config/db/schema';
 import postgres from 'postgres';
 import { Overview } from './overview';
 import { RecentAttendance } from '../recent-attendance';
+import { alias } from 'drizzle-orm/pg-core';
 
 interface LecturerDashboardProps {
   totalStudent: number | string;
@@ -40,17 +41,20 @@ export const LecturerDashboard: React.FC<LecturerDashboardProps> = async ({
     },
   ];
 
+  const c1 = alias(courses, 'c1');
   const graphData = (await db.execute(sql`
-         SELECT ${courses.id},${courses.courseCode} as "courseCode", ${
-    courses.name
-  }, count(*) as "attendanceNo"  FROM ${courses}
-          LEFT JOIN ${attendances} ON ${attendances.courseId} = ${courses.id}
-          WHERE ${courses.id} in (
+         SELECT 
+         ${courses.id},
+         ${courses.courseCode} as "courseCode",
+        ${courses.name}, 
+        (
+          SELECT count(*) FROM ${attendances}
+          WHERE ${attendances.courseId} = ${c1.id}
+        ) as "attendanceNo" FROM ${c1}
+          WHERE ${c1.id} in (
           SELECT ${lecturerAttendees.courseId} FROM ${lecturerAttendees}
           WHERE ${lecturerAttendees.lecturerId} = ${user.lecturer!.id}
-          )
-          GROUP BY ${courses.id}
-      
+        )
   `)) as postgres.RowList<
     Array<{
       id: string;
