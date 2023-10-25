@@ -41,17 +41,17 @@ export const LecturerDashboard: React.FC<LecturerDashboardProps> = async ({
     },
   ];
 
-  const c1 = alias(courses, 'c1');
   const graphData = (await db.execute(sql`
          SELECT 
-         ${courses.id},
-         ${courses.courseCode} as "courseCode",
-        ${courses.name}, 
-        (
-          SELECT count(*) FROM ${attendances}
-          WHERE ${attendances.courseId} = ${c1.id}
-        ) as "attendanceNo" FROM ${c1}
-          WHERE ${c1.id} in (
+          c1.id,
+          c1.course_code as "courseCode",
+          c1.name,
+          (
+            SELECT count(*) FROM ${attendances}
+            WHERE ${attendances.courseId} = c1.id
+          ) as "attendanceNo"
+          FROM ${courses} c1
+          WHERE c1.id in (
           SELECT ${lecturerAttendees.courseId} FROM ${lecturerAttendees}
           WHERE ${lecturerAttendees.lecturerId} = ${user.lecturer!.id}
         )

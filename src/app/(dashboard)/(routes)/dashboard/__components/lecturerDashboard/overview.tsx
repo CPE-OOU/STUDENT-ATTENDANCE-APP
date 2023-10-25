@@ -24,7 +24,6 @@ export function Overview({ data }: OverviewProps) {
         data={data}
         margin={{
           top: 5,
-
           bottom: 5,
         }}
       >
