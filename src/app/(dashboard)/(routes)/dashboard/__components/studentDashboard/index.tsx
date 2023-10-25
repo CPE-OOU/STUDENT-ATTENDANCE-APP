@@ -3,8 +3,6 @@ import { Archive, Library, User2 } from 'lucide-react';
 import { SideAction } from '../../../account/__components/side-action';
 import { ClientUser } from '@/lib/auth';
 
-import { RecentAttendance } from '../recent-attendance';
-
 interface StudentDashboardProps {
   totalAttendance: number;
   totalPresent: number;
