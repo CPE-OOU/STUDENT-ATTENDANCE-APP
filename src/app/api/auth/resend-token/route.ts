@@ -9,7 +9,11 @@ import {
   evaluateAuthToken,
 } from '@/lib/utils';
 import { getCurrentUser } from '@/lib/auth';
-import { authAction, authTokens } from '@/config/db/schema/authToken';
+import {
+  AuthToken,
+  authAction,
+  authTokens,
+} from '@/config/db/schema/authToken';
 import { eq, sql } from 'drizzle-orm';
 import { StatusCodes } from 'http-status-codes';
 import { Request as ExpressRequest, getClientIp } from 'request-ip';
@@ -105,14 +109,14 @@ export const POST = async (req: Request) => {
       await db
         .delete(authTokens)
         .where(
-          sql`${authTokens.token} = ${tokenRecord.token} AND ${user.id} = ${users.id}`
+          sql`${authTokens.token} = ${tokenRecord.token} AND ${user.id} = ${authTokens.userId}`
         );
+      console.log('done');
     }
 
-    let token;
+    let token: AuthToken;
     if (type === 'change-email') {
       await db.transaction(async (tx) => {
-        token = await generateOTP('account-verify', user.id);
         [token] = await Promise.all([
           generateOTP('account-verify', user.id),
           novuNotification.trigger('change-email', {

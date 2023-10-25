@@ -51,13 +51,22 @@ export function evaluateAuthToken(
   token: AuthToken,
   { currentIp }: { currentIp?: string | null }
 ) {
+  let allowResend =
+    Math.max(
+      differenceInMinutes(
+        token.createdAt!,
+        addMinutes(new Date(), TOKEN_RESEND_MIN)
+      ),
+      0
+    ) === 0;
+
+  if (!allowResend) {
+    allowResend = currentIp !== token.userIp;
+  }
+
   return {
     expired: new Date(token.expiresIn).getTime() < Date.now(),
-    allowResend:
-      Math.max(
-        differenceInMinutes(token.createdAt!, new Date().getTime()),
-        0
-      ) === 0,
+    allowResend,
   };
 }
 

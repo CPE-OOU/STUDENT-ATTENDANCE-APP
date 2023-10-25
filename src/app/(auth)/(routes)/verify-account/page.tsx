@@ -1,7 +1,6 @@
 import { Banner } from '@/components/banner';
 import { VerifyAccountForm } from './__component/verify-form';
 
-import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import {
   VerifyAccountSearchParams,

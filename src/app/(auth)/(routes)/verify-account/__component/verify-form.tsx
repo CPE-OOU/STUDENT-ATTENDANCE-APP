@@ -32,7 +32,6 @@ export const VerifyAccountForm: React.FC<VerifyAccountFormProps> = ({
   autoRequestToken,
   type,
 }) => {
-  console.log({ autoRequestToken });
   const [clientForwardOtpRequest, setClientForwatdOtpRequest] = useState(
     autoRequestToken ?? false
   );
@@ -67,7 +66,7 @@ export const VerifyAccountForm: React.FC<VerifyAccountFormProps> = ({
     isLoading: autoTokenRequestLoading,
     data,
     mutateAsync,
-  } = useResendAuthToken();
+  } = useResendAuthToken(type);
 
   const formData = form.getValues();
   const formDigitFields = Object.keys(formData).sort();

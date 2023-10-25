@@ -3,7 +3,7 @@ import { useGlobalState } from '@/hooks/use-global-state';
 import { cn } from '@/lib/utils';
 import { VerifyAccountSearchParams } from '@/lib/validations/params';
 import { useResendAuthToken } from '@/queries/use-resend-auth';
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 
 import { useTimer } from 'react-timer-hook';
 import { toast } from 'sonner';
@@ -25,19 +25,27 @@ export function ResendCode({
     })
   );
 
-  const { isLoading, mutateAsync } = useResendAuthToken();
+  const { isLoading, mutateAsync } = useResendAuthToken(type);
   const now = new Date();
   const expiresTime = retryAfter ? new Date(retryAfter) : now;
 
-  const { minutes, seconds, isRunning, restart } = useTimer({
-    expiryTimestamp: retryAfter ? new Date(retryAfter) : now,
-    autoStart: stopTimer !== true || (expiresTime === now && false),
+  const { minutes, seconds, isRunning, restart, resume, pause } = useTimer({
+    expiryTimestamp: expiresTime,
+    autoStart: false,
   });
 
-  useEffect(() => {
-    if (!retryAfter) return;
-    restart(new Date(retryAfter), stopTimer);
-  }, [retryAfter, stopTimer]);
+  useLayoutEffect(() => {
+    if (expiresTime.getTime() > now.getTime()) {
+      resume();
+    }
+  }, [retryAfter]);
+
+  useLayoutEffect(() => {
+    if (stopTimer && isRunning) {
+      pause();
+    }
+  }, [stopTimer]);
+
   return (
     <p className="font-normal text-transparent text-[16px] tracking-[0] leading-[24px] whitespace-nowrap">
       <span className="font-medium text-[#3f3f44]">Didn't receive code? </span>
