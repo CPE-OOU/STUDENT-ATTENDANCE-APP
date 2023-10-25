@@ -11,6 +11,7 @@ import { sql } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import postgres from 'postgres';
 import { LecturerDashboard } from './__components/lecturerDashboard';
+import { StudentDashboard } from './__components/studentDashboard';
 
 const DashboardPage = async () => {
   const user = await getCurrentUser();
@@ -62,46 +63,39 @@ const DashboardPage = async () => {
 
     return <LecturerDashboard {...data} user={user} />;
   } else {
-    const [data] = await db.execute(sql`
-    SELECT
-      (
-        SELECT count(*) FROM ${courses}
-        WHERE ${courses.id} in
-          (
-            SELECT ${courses.id} FROM ${courses}
-            INNER JOIN ${studentAttendees}
-            ON ${studentAttendees.courseId} = ${courses.id}
-            WHERE ${studentAttendees.studentId} = ${user.student!.id}
-          )
-      ) as "totalCourse",
-      (
-        SELECT count(*) FROM ${attendances}
-        WHERE ${attendances.id} in 
-          (
-            SELECT FROM ${studentAttendances}
-            WHERE ${studentAttendances.studentAttendeeId} in 
-            (
-              SELECT ${studentAttendees.id} FROM ${studentAttendees}
-              WHERE ${studentAttendees.studentId} = ${user.student!.id}
-            ) AND ${studentAttendances.present} = true::BOOLEAN
-          ) 
-      ) as "totalAttendanceTaken",
+    const [attendanceInfo] = (await db.execute(sql`
+      WITH st AS (
+      SELECT * FROM ${studentAttendances}
+      INNER JOIN ${studentAttendees} ON ${studentAttendees.id} = ${
+      studentAttendances.studentAttendeeId
+    }
+      WHERE ${studentAttendees.studentId} = ${user.student!.id}
+    )
+    
+    SELECT 
+      count(*) as "totalAttendance",
+      (SELECT count(*) FROM st WHERE st.present = true::BOOLEAN) as "totalPresent",
+      (SELECT count(*) FROM st WHERE st.present = false::BOOLEAN) as "totalAbsent"
+    FROM st
+    `)) as postgres.RowList<
+      { totalAttendance: number; totalPresent: number; totalAbsent: number }[]
+    >;
 
-      (
-        SELECT count(*) FROM ${attendances}
-        WHERE ${attendances.id} in 
-          (
-            SELECT FROM ${studentAttendances}
-            WHERE ${studentAttendances.studentAttendeeId} in 
-            (
-              SELECT ${studentAttendees.id} FROM ${studentAttendees}
-              WHERE ${studentAttendees.studentId} = ${user.student!.id}
-            ) AND ${studentAttendances.present} = false::BOOLEAN
-          ) 
-      ) as "totalAttendanceMissed"
-    `);
+    const [{ totalCourse }] = (await db.execute(sql`
+        SELECT count(*) as "totalCourse" FROM ${courses}
+        WHERE ${courses.id} IN (
+          SELECT ${studentAttendees.courseId} FROM ${studentAttendees}
+          WHERE ${studentAttendees.studentId} = ${user.student!.id} 
+        )
+    `)) as postgres.RowList<{ totalCourse: number }[]>;
 
-    return <div>Student Dashboard</div>;
+    return (
+      <StudentDashboard
+        {...attendanceInfo}
+        totalCourse={totalCourse}
+        user={user}
+      />
+    );
   }
 };
 
