@@ -33,17 +33,29 @@ export function Overview({ data }: OverviewProps) {
           fontSize={12}
           tickLine={false}
           axisLine={true}
-        />
+        >
+          <Label
+            dy={15}
+            // offset={40}
+            className="text-slate-900 text-xs"
+            // style={{
+            //   textAnchor: 'middle',
+            // }}
+            // angle={270}
+            value="Course Code"
+          />
+        </XAxis>
         <YAxis
           dataKey={'attendanceNo'}
           stroke="#888888"
           fontSize={12}
           tickLine={false}
           axisLine={true}
+          domain={[0, (dataMax: number) => Math.max(dataMax, 12)]}
         >
           <Label
-            dx={-20}
-            offset={40}
+            dx={-15}
+            offset={20}
             className="text-slate-900 text-xs"
             style={{
               textAnchor: 'middle',
