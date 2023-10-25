@@ -46,7 +46,8 @@ export const PATCH = async (req: Request) => {
             .where(eq(users.id, user.id!)),
           db
             .update(accountSettings)
-            .set({ setupCompleted: true, userId: user.id! }),
+            .set({ setupCompleted: true, userId: user.id! })
+            .where(eq(accountSettings.userId, user.id!)),
           db
             .insert(students)
             .values({ department, level, university, userId: user.id! }),

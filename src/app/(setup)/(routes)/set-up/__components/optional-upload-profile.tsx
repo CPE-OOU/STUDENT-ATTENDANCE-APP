@@ -39,7 +39,6 @@ export const OptionalUploadProfile: React.FC<OptionalUploadProfileProps> = ({
 
   const { isLoading: serverUpdatingProfile, mutateAsync: setupUserProfile } =
     useSetupProfile();
-  const [triggerServerSync, setTriggerServerSync] = useState(false);
   const router = useRouter();
 
   const uploadImage = async (file: File, abort?: AbortController) => {
@@ -113,7 +112,6 @@ export const OptionalUploadProfile: React.FC<OptionalUploadProfileProps> = ({
         type: (getStepData(1) as SetupChooseAccountTypeFormData).type,
         profileInfo: Object.assign({}, getStepData(2), getStepData(3)),
       };
-      console.log(formData);
       const [sanitizedFormData] = [
         userAsStudentFormSchema,
         userAsLecturerFormSchema,
@@ -136,16 +134,9 @@ export const OptionalUploadProfile: React.FC<OptionalUploadProfileProps> = ({
       await setupUserProfile(sanitizedFormData);
       router.push('/dashboard');
     } catch (e) {
-      console.log(e);
       toast.error('An error occurred while updating profile details');
     }
   }
-
-  useEffect(() => {
-    if (triggerServerSync && stepFormCompleted()) {
-      submitProfileUpdate();
-    }
-  }, [triggerServerSync]);
 
   useEffect(() => {
     setStepState(stepOption.step, { url });
@@ -209,7 +200,7 @@ export const OptionalUploadProfile: React.FC<OptionalUploadProfileProps> = ({
               variant="default"
               disabled={disableAction}
               className="w-[108px] h-[38px] bg-[#3F3F44]  p-0
-                       text-white hover:bg-[#3F3F44] "
+                       text-white hover:bg-[#3F3F44]  disabled:bg-[#3F3F44]/70"
             >
               <label
                 htmlFor="upload-profile-image"
@@ -223,22 +214,22 @@ export const OptionalUploadProfile: React.FC<OptionalUploadProfileProps> = ({
 
         <div className="flex gap-x-4 w-[460px] mt-14">
           <Button
-            disabled={uploading}
-            className="bg-transparent  border-2 border-[#FDCB9E] flex-grow hover:bg-transparent"
+            disabled={disableAction}
+            className="border-2 border-[#FDCB9E] flex-grow hover:bg-transparent"
             type="button"
+            variant="outline"
             onClick={() => setSkippedUpload(true)}
           >
             Skip
           </Button>
           <Button
-            disabled={skippedUpload !== true && disableAction}
+            disabled={disableAction}
             variant="primary"
             className="flex-grow"
             type="button"
-            onClick={(event) => {
+            onClick={() => {
               if (disableAction) return;
-              event.preventDefault();
-              setTriggerServerSync(true);
+              submitProfileUpdate();
             }}
           >
             Continue
