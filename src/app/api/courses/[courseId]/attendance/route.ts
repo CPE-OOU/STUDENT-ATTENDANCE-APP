@@ -245,14 +245,30 @@ export const POST = async (req: Request, param: unknown) => {
         .from(studentAttendees)
         .where(eq(studentAttendees.courseId, courseId));
 
-      await Promise.all(
-        attendees.map(({ id }) =>
-          db.insert(studentAttendances).values({
-            studentAttendeeId: id,
-            attendanceId: attendance.id,
-          })
-        )
-      );
+      await db.execute(sql`
+        DO $$
+        DECLARE
+            student_id UUID;
+        BEGIN
+            FOR attendee_id IN 
+                SELECT ${studentAttendees.id} as attendee_id
+                FROM ${studentAttendees}
+                WHERE ${studentAttendees.courseId} = ${courseId}
+            LOOP
+                INSERT INTO ${studentAttendances} (student_attendee_id, course_attendance)
+                VALUES (attendee_id, ${attendance.id});
+            END LOOP;
+        END$$;
+        `);
+
+      // await Promise.all(
+      //   attendees.map(({ id }) =>
+      //     db.insert(studentAttendances).values({
+      //       studentAttendeeId: id,
+      //       attendanceId: attendance.id,
+      //     })
+      //   )
+      // );
 
       return attendance;
     });
