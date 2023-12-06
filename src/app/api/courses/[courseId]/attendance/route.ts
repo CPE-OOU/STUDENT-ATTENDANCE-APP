@@ -4,6 +4,8 @@ import {
   courses,
   lecturerAttendees,
   lecturers,
+  studentAttendances,
+  studentAttendees,
   users,
 } from '@/config/db/schema';
 import { getCurrentUser } from '@/lib/auth';
@@ -227,15 +229,33 @@ export const POST = async (req: Request, param: unknown) => {
       await req.json()
     );
 
-    const [attendance] = await db
-      .insert(attendances)
-      .values({
-        lecturerAttendeeId: user.lecturer!.id,
-        topicTitle,
-        courseId,
-        expires,
-      })
-      .returning();
+    const attendance = await db.transaction(async (tx) => {
+      const [attendance] = await db
+        .insert(attendances)
+        .values({
+          lecturerAttendeeId: user.lecturer!.id,
+          topicTitle,
+          courseId,
+          expires,
+        })
+        .returning();
+
+      const attendees = await db
+        .select()
+        .from(studentAttendees)
+        .where(eq(studentAttendees.courseId, courseId));
+
+      await Promise.all(
+        attendees.map(({ id }) =>
+          db.insert(studentAttendances).values({
+            studentAttendeeId: id,
+            attendanceId: attendance.id,
+          })
+        )
+      );
+
+      return attendance;
+    });
 
     return createSuccessResponse(
       { title: 'Attendance created', data: attendance },

@@ -1,4 +1,11 @@
-import { pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  json,
+  pgEnum,
+  pgTable,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 import { users } from '.';
 
 export const gradeLevel = pgEnum('grade_level', [
@@ -19,6 +26,7 @@ export const students = pgTable('students', {
     .references(() => users.id)
     .notNull()
     .unique(),
+  captures: json('captures').$type<string[]>(),
   createdAt: timestamp('created_at', {
     mode: 'date',
     withTimezone: true,

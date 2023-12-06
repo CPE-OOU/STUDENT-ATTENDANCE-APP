@@ -10,6 +10,7 @@ const EnvDefinedSchema = object({
   NEXT_SUPABASE_ANON: string(),
   NEXT_SUPABASE_SECRET_KEY: string(),
   NEXT_PUBLIC_URL: string().optional(),
+  CAPTURE_VERIFICATION_SERVER: string().url(),
 });
 
 const parsedEnv = EnvDefinedSchema.parse(process.env);
