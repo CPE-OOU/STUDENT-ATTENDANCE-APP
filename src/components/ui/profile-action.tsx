@@ -1,3 +1,5 @@
+'use client';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +14,7 @@ import Image from 'next/image';
 import { ClientUser } from '@/lib/auth';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import { useModal } from '@/hooks/use-modal';
 interface ProfileActionProps {
   user: ClientUser;
 }
@@ -19,6 +22,7 @@ interface ProfileActionProps {
 export const ProfileAction: React.FC<ProfileActionProps> = ({
   user: { imageUrl, firstName, lastName, type, email },
 }) => {
+  const openModal = useModal(({ onOpen }) => onOpen);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="outline-none">
@@ -62,6 +66,14 @@ export const ProfileAction: React.FC<ProfileActionProps> = ({
           <DropdownMenuItem>Profile</DropdownMenuItem>
           <DropdownMenuItem>Attedance</DropdownMenuItem>
           <DropdownMenuItem>Courses</DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              console.log('Hi');
+              openModal('take-capture');
+            }}
+          >
+            Take Capture
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>Log out</DropdownMenuItem>

@@ -7,6 +7,7 @@ import { getSession } from 'next-auth/react';
 import { AuthSessionProvider } from '@/providers/session';
 import { getCurrentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { ModalProvider } from '@/providers/modal-provider';
 
 const font = createLocalFont({
   src: [
@@ -66,6 +67,7 @@ export default async function RootLayout({
         <ToastProvider />
         <QueryProvider>
           <AuthSessionProvider session={session}>
+            <ModalProvider />
             {children}
           </AuthSessionProvider>
         </QueryProvider>
