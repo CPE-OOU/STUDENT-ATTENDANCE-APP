@@ -12,12 +12,12 @@ import {
 } from '@/config/db/schema';
 import { sql } from 'drizzle-orm';
 import postgres from 'postgres';
-import { courseColumns } from './__components/columns';
 import {
   LectureBuildCoursePayload,
   lectureBuildCourseObject,
   resolveLectureViewCourseSort,
 } from '@/lib/db-statements/course';
+import { courseColumns } from './__components/columns';
 
 interface LecturerPartakeCoursesPageProps {
   searchParams: { [query: string]: unknown };
@@ -93,6 +93,7 @@ const LecturerPartakeCoursesPage = async ({
             data={data.courses}
             columns={courseColumns}
             totalCount={data.totalCounts}
+            meta={{ user }}
           />
         </div>
       </div>

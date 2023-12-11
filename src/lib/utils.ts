@@ -216,3 +216,38 @@ export function resolveSortField<
     ? desc(field as AnyColumn)
     : asc(field as AnyColumn);
 }
+
+export function decodeBase64ToFile(encode: string, fileName: string) {
+  // const binaryData = window.atob(encode);
+  const mimeType = encode.substring('data:'.length, encode.indexOf(';base64'));
+  // const byteArray = new Uint8Array(binaryData.length);
+  // for (let i = 0; i < binaryData.length; i++) {
+  //   byteArray[i] = binaryData.charCodeAt(i);
+  // }
+
+  const blob = new Blob([encode], { type: mimeType });
+  return new File([blob], fileName);
+}
+
+export async function base64ToBlob(base64: string): Promise<Blob> {
+  const response = await fetch(base64);
+  let blob = await response.blob();
+  const mimeType = getMimeType(base64);
+  if (mimeType) {
+    // https://stackoverflow.com/a/50875615
+    blob = blob.slice(0, blob.size, mimeType);
+  }
+  return blob;
+}
+
+const mimeRegex = /^data:(.+);base64,/;
+
+/**
+ * Gets MIME type from Base64.
+ *
+ * @param base64 - Base64.
+ * @returns - MIME type.
+ */
+function getMimeType(base64: string) {
+  return base64.match(mimeRegex)?.slice(1, 2).pop();
+}

@@ -6,9 +6,9 @@ const EnvDefinedSchema = object({
   NOVI_APP_HANDLER: string().min(1),
   NOVU_ENV_ID: string().min(1),
   NEXTAUTH_URL: string().url().optional(),
-  NEXT_SUPABASE_URL: string().url(),
+  NEXT_PUBLIC_SUPABASE_URL: string().url(),
   NEXT_SUPABASE_ANON: string(),
-  NEXT_SUPABASE_SECRET_KEY: string(),
+  NEXT_PUBLIC_SUPABASE_SECRET_KEY: string(),
   NEXT_PUBLIC_URL: string().optional(),
   CAPTURE_VERIFICATION_SERVER: string().url(),
 });

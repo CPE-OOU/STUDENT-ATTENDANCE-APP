@@ -18,6 +18,11 @@ import Webcam from 'react-webcam';
 import { Button } from '../ui/button';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
+import { base64ToBlob, cn, decodeBase64ToFile } from '@/lib/utils';
+import { useAction } from 'next-safe-action/hook';
+import { updateCapture } from '@/actions/capture';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const videoConstraints = {
   width: 540,
@@ -26,37 +31,55 @@ const videoConstraints = {
 
 export const TakeCaptureModal = () => {
   const { type, opened, onClose } = useModal();
+  const { execute, status } = useAction(updateCapture, {
+    onSuccess: () => {
+      toast.success('Capture', {
+        description: 'Student capture is updated successfully',
+      });
+      onClose();
+    },
+    onError: () => {
+      toast.success('Capture', {
+        description: 'An error occurred while updating student capture',
+      });
+    },
+  });
 
   const mounted = useMount();
 
-  const [serverUpdatingProfile, setServerUpdatingProfile] = useState(false);
-  const router = useRouter();
-
-  const openEditModal = useModal(({ onOpen }) => onOpen);
+  const modalData = useModal(({ data }) => data);
 
   const webcamRef = useRef<Webcam | null>(null);
   const [url, setUrl] = useState<string | null>(null);
 
   const capturePhoto = useCallback(async () => {
     const imageSrc = webcamRef.current?.getScreenshot();
-    if (imageSrc) {
-      setUrl(imageSrc);
-    }
+    if (imageSrc) setUrl(imageSrc);
   }, [webcamRef]);
 
-  const onUserMedia = (e: any) => {
-    console.log(e);
-  };
-
-  function uploadCapture() {
-    // supabase.storage.from()
+  async function uploadCapture() {
+    if (url) {
+      const { id, firstName, lastName } = modalData?.user!;
+      const fileName = `${firstName}-${lastName}-${new Date().toISOString()}`;
+      const file = new File([await base64ToBlob(url)], fileName);
+      const { data } = await supabase.storage
+        .from('images')
+        .upload(
+          `user/${id}/captures/${firstName}-${lastName}-${new Date().toISOString()}.jpeg`,
+          file
+        );
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('images').getPublicUrl(`profile/${fileName}`);
+      await execute({ captureUrl: publicUrl, userId: id });
+    }
   }
 
-  if (!(mounted && type === 'take-capture')) return null;
+  if (!(mounted && modalData?.user && type === 'take-capture')) return null;
   return (
     <Dialog open={opened} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="bg-white text-black p-0 overflow-hidden pt-8 rounded-[4px!important]"
+        className="bg-white text-black p-0 overflow-hidden pt-8 rounded-[4px!important] pb-8"
         style={{ borderRadius: 'none' }}
       >
         <DialogHeader className=" px-6">
@@ -69,29 +92,41 @@ export const TakeCaptureModal = () => {
           </DialogDescription>
         </DialogHeader>
         <Separator />
-        {url ? (
-          <div className="relative w-12 h-12">
-            <Image src={url} alt="Screenshot" fill />
+        <div className="px-6 rounded-sm overflow-hidden space-y-6">
+          {url ? (
+            <div className="relative w-[462px] h-[346px]">
+              <Image src={url} alt="Screenshot" fill />
+            </div>
+          ) : (
+            <Webcam
+              ref={webcamRef}
+              audio={false}
+              disablePictureInPicture
+              screenshotFormat="image/jpeg"
+              videoConstraints={videoConstraints}
+            />
+          )}
+          <div className="flex items-center justify-center mb-12">
+            {!url ? (
+              <Button onClick={capturePhoto}>Capture</Button>
+            ) : (
+              <div className="flex items-center gap-x-2">
+                <Button variant="outline" onClick={() => setUrl(null)}>
+                  Retake
+                </Button>
+                <Button onClick={uploadCapture} className="items-center">
+                  Upload
+                  <Loader2
+                    className={cn(
+                      'w-5 h-5 animate-spin hidden ml-2',
+                      status === 'executing' && 'block'
+                    )}
+                  />
+                </Button>
+              </div>
+            )}
           </div>
-        ) : (
-          <Webcam
-            ref={webcamRef}
-            audio={true}
-            screenshotFormat="image/jpeg"
-            videoConstraints={videoConstraints}
-            onUserMedia={onUserMedia}
-          />
-        )}
-        {url ? (
-          <Button onClick={capturePhoto}>Capture</Button>
-        ) : (
-          <div>
-            <Button variant="outline" onClick={() => setUrl(null)}>
-              Refresh
-            </Button>
-            <Button onClick={uploadCapture}>Upload</Button>
-          </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -35,12 +35,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   totalCount: number;
+  meta?: Record<string, unknown>;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   totalCount,
+  meta,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter();
   const pathname = usePathname();
@@ -160,6 +162,9 @@ export function DataTable<TData, TValue>({
     manualSorting: true,
     manualFiltering: true,
     manualPagination: true,
+    meta: {
+      ...meta,
+    },
   });
 
   return (

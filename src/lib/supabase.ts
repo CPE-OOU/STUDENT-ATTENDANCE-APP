@@ -1,10 +1,9 @@
-import { parsedEnv } from '@/config/env/validate';
 import { createClient } from '@supabase/supabase-js';
 
 // Create a single supabase client for interacting with your database
 const supabase = createClient(
-  parsedEnv.NEXT_SUPABASE_URL,
-  parsedEnv.NEXT_SUPABASE_SECRET_KEY
+  process.env['NEXT_PUBLIC_SUPABASE_URL'] as string,
+  process.env['NEXT_PUBLIC_SUPABASE_SECRET_KEY'] as string
 );
 
 export { supabase };

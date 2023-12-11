@@ -19,9 +19,8 @@ interface ProfileActionProps {
   user: ClientUser;
 }
 
-export const ProfileAction: React.FC<ProfileActionProps> = ({
-  user: { imageUrl, firstName, lastName, type, email },
-}) => {
+export const ProfileAction: React.FC<ProfileActionProps> = ({ user }) => {
+  const { imageUrl, firstName, lastName, type, email } = user;
   const openModal = useModal(({ onOpen }) => onOpen);
   return (
     <DropdownMenu>
@@ -69,7 +68,9 @@ export const ProfileAction: React.FC<ProfileActionProps> = ({
           <DropdownMenuItem
             onClick={() => {
               console.log('Hi');
-              openModal('take-capture');
+              openModal('take-capture', {
+                user,
+              });
             }}
           >
             Take Capture
