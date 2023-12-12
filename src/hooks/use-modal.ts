@@ -1,10 +1,11 @@
 import { ClientUser } from '@/lib/auth';
 import { create } from 'zustand';
 
-type ModalType = 'take-capture' | 'verify-capture';
+type ModalType = 'take-capture' | 'take-attendance' | 'create-attendance';
 
 type ModalData = {
   user?: ClientUser;
+  createAttendanceData?: { courseId: string; lecturerAttendeeId: string };
 };
 
 interface ModalStore {

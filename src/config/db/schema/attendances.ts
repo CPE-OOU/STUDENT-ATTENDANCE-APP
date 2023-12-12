@@ -1,9 +1,10 @@
 import { lecturerAttendees } from './lecturer-attendees';
 import { studentAttendees } from './student-attendee';
-import { pgTable, uuid, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, varchar, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { studentAttendances } from './student-attendances';
-import { courses } from '.';
+import { courses } from './course';
+import { expiredAfter } from './enums';
 
 export const attendances = pgTable('attendance', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -18,7 +19,9 @@ export const attendances = pgTable('attendance', {
     () => studentAttendees.id
   ),
 
-  expires: timestamp('created_at', {
+  expiredAfter: expiredAfter('expired_after'),
+
+  expires: timestamp('expires', {
     mode: 'date',
     withTimezone: true,
   }).notNull(),

@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -11,14 +10,13 @@ import {
 import { useModal } from '@/hooks/use-modal';
 import { useCallback, useRef, useState } from 'react';
 
-import { useRouter } from 'next/navigation';
 import { useMount } from '@/hooks/use-mouted';
 import { Separator } from '../ui/separator';
 import Webcam from 'react-webcam';
 import { Button } from '../ui/button';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { base64ToBlob, cn, decodeBase64ToFile } from '@/lib/utils';
+import { base64ToBlob, cn } from '@/lib/utils';
 import { useAction } from 'next-safe-action/hook';
 import { updateCapture } from '@/actions/capture';
 import { Loader2 } from 'lucide-react';

@@ -14,3 +14,5 @@ export const formOfAddress = pgEnum('form_of_address', [
   'doc',
   'prof',
 ]);
+
+export const expiredAfter = pgEnum('expired_after', ['15min', '30min', '1hr']);
