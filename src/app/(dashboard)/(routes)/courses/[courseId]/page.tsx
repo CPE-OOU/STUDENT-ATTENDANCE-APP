@@ -1,10 +1,10 @@
 import { db } from '@/config/db/client';
 import {
+  StudentAttendee,
   attendances,
   courses,
   lecturerAttendees,
   lecturers,
-  studentAttendances,
   studentAttendees,
   users,
 } from '@/config/db/schema';
@@ -16,8 +16,8 @@ import { SideAction } from '../../account/__components/side-action';
 import postgres from 'postgres';
 import { Megaphone, Presentation, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { ActionButtons } from './__components/action-button';
+import { AttendanceItem } from './__components/attendance-item';
 
 const courseIdParams = object({ courseId: string().uuid() });
 
@@ -96,6 +96,17 @@ export default async function CourseIdPage({
       sql`${attendances.expires} > CURRENT_TIMESTAMP AND ${attendances.courseId} = ${course.id}`
     );
 
+  let capturerAttendee: StudentAttendee | null = null;
+  if (user.student) {
+    [capturerAttendee] = await db.select().from(studentAttendees).where(sql`
+      ${studentAttendees.courseId} = ${courseId} AND ${studentAttendees.studentId} = ${user.student.id}
+    `);
+
+    if (capturerAttendee) {
+      return redirect('/');
+    }
+  }
+
   const { totalAttendance, totalLecturerAttendee, totalStudentAttendee } =
     attendanceInfo;
   const tags = [
@@ -151,15 +162,10 @@ export default async function CourseIdPage({
 
           <div className="mt-8">
             {activeAttendances.map((attendance) => (
-              <div
-                key={attendance.id}
-                className="inline-flex items-center gap-x-8"
-              >
-                <div>
-                  <h4 className="uppercase text-lg">{attendance.topicTitle}</h4>
-                </div>
-                <Button>Start Attendance</Button>
-              </div>
+              <AttendanceItem
+                attendance={attendance}
+                attendanceCapturerId={capturerAttendee?.id}
+              />
             ))}
           </div>
         </div>

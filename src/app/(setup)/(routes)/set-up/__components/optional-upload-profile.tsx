@@ -147,8 +147,7 @@ export const OptionalUploadProfile: React.FC<OptionalUploadProfileProps> = ({
     setStepCompleted(stepOption.step, { completed: /^http/.test(url ?? '') });
   }, [url, skippedUpload]);
 
-  const disableAction =
-    serverUpdatingProfile || uploading || !stepFormCompleted();
+  const disableAction = false;
 
   return (
     <div>

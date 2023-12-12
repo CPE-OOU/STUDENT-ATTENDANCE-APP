@@ -6,7 +6,11 @@ type ModalType = 'take-capture' | 'take-attendance' | 'create-attendance';
 type ModalData = {
   user?: ClientUser;
   createAttendanceData?: { courseId: string; lecturerAttendeeId: string };
-  takeAttendanceData?: { id: string };
+  takeAttendanceData?: {
+    id: string;
+    courseId: string;
+    attendanceCapturerId: string;
+  };
 };
 
 interface ModalStore {

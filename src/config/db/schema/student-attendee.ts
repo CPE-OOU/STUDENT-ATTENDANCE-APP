@@ -36,3 +36,5 @@ export const studentAttendeesRelation = relations(
     }),
   })
 );
+
+export type StudentAttendee = typeof studentAttendees.$inferSelect;

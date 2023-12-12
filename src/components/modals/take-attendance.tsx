@@ -42,13 +42,14 @@ import { useCallback, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
 import Webcam from 'react-webcam';
+import { FailedServerResponsePayload } from '@/lib/response';
 
 const videoConstraints = {
   width: 540,
   facingMode: 'environment',
 };
 
-export const CreateStudentAttendance = () => {
+export const TakeStudentAttendance = () => {
   const { type, opened, onClose } = useModal();
 
   const mounted = useMount();
@@ -71,31 +72,60 @@ export const CreateStudentAttendance = () => {
     if (imageSrc) setUrl(imageSrc);
   }, [webcamRef]);
 
-  const { execute, status } = useAction(verifyStudentDetail);
+  const {
+    execute: executeVerifyEmail,
+    status: verifyEmailStatus,
+    result,
+  } = useAction(verifyStudentDetail);
+  const [serverVerifyingId, setServerVerifyingId] = useState(false);
+  console.log({ verifyEmailStatus, result });
 
-  async function uploadCapture() {
-    if (url) {
-      const { id, firstName, lastName } = modalData?.user!;
-      const fileName = `${firstName}-${lastName}-${new Date().toISOString()}`;
-      const file = new File([await base64ToBlob(url)], fileName);
-      const { data } = await supabase.storage
-        .from('images')
-        .upload(
-          `user/${id}/captures/${firstName}-${lastName}-${new Date().toISOString()}.jpeg`,
-          file
-        );
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('images').getPublicUrl(`profile/${fileName}`);
+  async function verifyUserId() {
+    try {
+      setServerVerifyingId(true);
+      if (url) {
+        const { id: userId, firstName, lastName } = modalData?.user!;
+        const fileName = `${firstName}-${lastName}-${new Date().toISOString()}`;
+        const file = new File([await base64ToBlob(url)], fileName);
+        const { data } = await supabase.storage
+          .from('images')
+          .upload(
+            `user/${userId}/captures/${firstName}-${lastName}-${new Date().toISOString()}.jpeg`,
+            file
+          );
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('images').getPublicUrl(`profile/${fileName}`);
+        const { id, attendanceCapturerId } = modalData?.takeAttendanceData!;
+        const response = await fetch(`/api/attendance/${id}`, {
+          method: 'POST',
+          body: JSON.stringify({
+            captureImgUrl: publicUrl,
+            attendeeId: attendanceCapturerId,
+          }),
+        });
+
+        if (response.ok) {
+          toast.success('Approved', {
+            description: 'Student attendance verified',
+          });
+        } else {
+          const payload: FailedServerResponsePayload = await response.json();
+          toast.success(payload.title, { description: payload.message });
+        }
+      }
+    } catch (e) {
+      toast.success('Error', {
+        description: 'An error occur while taking ur attendance verification',
+      });
+    } finally {
+      setServerVerifyingId(false);
     }
   }
 
+  console.log({ data: modalData?.takeAttendanceData, type });
   if (
-    !(
-      mounted &&
-      modalData?.createAttendanceData &&
-      type === 'create-attendance'
-    )
+    !(mounted && modalData?.takeAttendanceData && type === 'take-attendance')
   ) {
     return null;
   }
@@ -116,84 +146,94 @@ export const CreateStudentAttendance = () => {
           </DialogDescription>
         </DialogHeader>
         <Separator />
-        <div className="px-6 rounded-sm overflow-hidden space-y-6"></div>
-        {attendee ? (
-          <div className="px-6 rounded-sm overflow-hidden space-y-6">
-            {url ? (
-              <div className="relative w-[462px] h-[346px]">
-                <Image src={url} alt="Screenshot" fill />
-              </div>
-            ) : (
-              <Webcam
-                ref={webcamRef}
-                audio={false}
-                disablePictureInPicture
-                screenshotFormat="image/jpeg"
-                videoConstraints={videoConstraints}
-              />
-            )}
-            <div className="flex items-center justify-center mb-12">
-              {!url ? (
-                <Button onClick={capturePhoto}>Capture</Button>
+        <div className="px-6 rounded-sm overflow-hidden space-y-6">
+          {attendee ? (
+            <div className="px-6 rounded-sm overflow-hidden space-y-6">
+              {url ? (
+                <div className="relative w-[462px] h-[346px]">
+                  <Image src={url} alt="Screenshot" fill />
+                </div>
               ) : (
-                <div className="flex items-center gap-x-2">
-                  <Button variant="outline" onClick={() => setUrl(null)}>
-                    Retake
-                  </Button>
-                  <Button onClick={uploadCapture} className="items-center">
-                    Upload
+                <Webcam
+                  ref={webcamRef}
+                  audio={false}
+                  disablePictureInPicture
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={videoConstraints}
+                />
+              )}
+              <div className="flex items-center justify-center mb-12">
+                {!url ? (
+                  <Button onClick={capturePhoto}>Capture</Button>
+                ) : (
+                  <div className="flex items-center gap-x-2">
+                    <Button variant="outline" onClick={() => setUrl(null)}>
+                      Retake
+                    </Button>
+                    <Button onClick={verifyUserId} className="items-center">
+                      Verify
+                      <Loader2
+                        className={cn(
+                          'w-5 h-5 animate-spin hidden ml-2',
+                          verifyEmailStatus === 'executing' && 'block'
+                        )}
+                      />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(({ email }) => {
+                  const { takeAttendanceData } = modalData;
+                  executeVerifyEmail({
+                    email,
+                    courseId: takeAttendanceData?.courseId!,
+                  });
+                })}
+              >
+                <FormField
+                  name="email"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-epilogue font-semibold text-base text-neutral-80">
+                        Enter your email
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value ?? undefined}
+                          type="text"
+                          placeholder="Enter your email"
+                          className="placeholder:text-neutral-40 font-medium rounded-none px-4 py-3"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="my-6">
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    className="px-6 py-3 ml-auto rounded-none"
+                  >
+                    Check
                     <Loader2
                       className={cn(
                         'w-5 h-5 animate-spin hidden ml-2',
-                        status === 'executing' && 'block'
+                        serverVerifyingId && 'block'
                       )}
                     />
                   </Button>
                 </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <Form {...form}>
-            <form>
-              <FormField
-                name="email"
-                control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-epilogue font-semibold text-base text-neutral-80">
-                      Enter your email
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ?? undefined}
-                        type="text"
-                        placeholder="Enter your email"
-                        className="placeholder:text-neutral-40 font-medium rounded-none px-4 py-3"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                variant="primary"
-                type="submit"
-                className="px-6 py-3 ml-auto rounded-none"
-              >
-                Check
-                <Loader2
-                  className={cn(
-                    'w-5 h-5 animate-spin hidden ml-2',
-                    status === 'executing' && 'block'
-                  )}
-                />
-              </Button>
-            </form>
-          </Form>
-        )}
+              </form>
+            </Form>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -65,7 +65,7 @@ export const createAttendance = action(input, async (data) => {
 });
 
 export const verifyStudentDetail = action(
-  object({ email: string().uuid(), courseId: string().uuid() }),
+  object({ email: string().email(), courseId: string().uuid() }),
   async ({ email, courseId }) => {
     return db
       .select()

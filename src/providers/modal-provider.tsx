@@ -1,6 +1,7 @@
 'use client';
 
 import { CreateStudentAttendance } from '@/components/modals/create-attendance';
+import { TakeStudentAttendance } from '@/components/modals/take-attendance';
 import { TakeCaptureModal } from '@/components/modals/take-capture';
 import { useMount } from '@/hooks/use-mouted';
 
@@ -13,7 +14,7 @@ export const ModalProvider = () => {
     <>
       <TakeCaptureModal />
       <CreateStudentAttendance />
-      <CreateStudentAttendance />
+      <TakeStudentAttendance />
     </>
   );
 };
