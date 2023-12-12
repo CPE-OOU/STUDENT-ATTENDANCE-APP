@@ -8,8 +8,8 @@ const videoConstraints = {
 };
 
 const Camera = () => {
-  const webcamRef = useRef(null);
-  const [url, setUrl] = React.useState(null);
+  const webcamRef = useRef<Webcam | null>(null);
+  const [url, setUrl] = React.useState<string | null>(null);
 
   const capturePhoto = React.useCallback(async () => {
     // const imageSrc = webcamRef.current.getScreenshot();
@@ -26,7 +26,7 @@ const Camera = () => {
   // Capture and send face data every 5 minutes
   // setInterval(captureAndSend, 5 * 1000);
 
-  const onUserMedia = (e) => {
+  const onUserMedia = (e: MediaStream) => {
     console.log(e);
   };
 

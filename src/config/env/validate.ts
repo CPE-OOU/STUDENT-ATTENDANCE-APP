@@ -11,6 +11,8 @@ const EnvDefinedSchema = object({
   NEXT_PUBLIC_SUPABASE_SECRET_KEY: string(),
   NEXT_PUBLIC_URL: string().optional(),
   CAPTURE_VERIFICATION_SERVER: string().url(),
+  CAPTURE_AUTH_TOKEN_VERIFICATION_SERVER: string(),
+  CAPTURE_AUTH_NAME_VERIFICATION_SERVER: string(),
 });
 
 const parsedEnv = EnvDefinedSchema.parse(process.env);

@@ -80,10 +80,10 @@ export const DELETE = async (_req: Request, params: unknown) => {
       );
     }
 
-    await db
-      .update(studentAttendees)
-      .set({ removed: true })
-      .where(eq(studentAttendees.id, studentAttendee.id));
+    // await db
+    //   .update(studentAttendees)
+    //   .set({ : true })
+    //   .where(eq(studentAttendees.id, studentAttendee.id));
 
     return createSuccessResponse(
       { title: 'Removed Successfully', message: 'Student removed succesfully' },
