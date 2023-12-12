@@ -13,6 +13,7 @@ export const ModalProvider = () => {
     <>
       <TakeCaptureModal />
       <CreateStudentAttendance />
+      <CreateStudentAttendance />
     </>
   );
 };
