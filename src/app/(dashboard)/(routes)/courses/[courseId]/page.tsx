@@ -3,8 +3,10 @@ import {
   attendances,
   courses,
   lecturerAttendees,
+  lecturers,
   studentAttendances,
   studentAttendees,
+  users,
 } from '@/config/db/schema';
 import { getCurrentUser } from '@/lib/auth';
 import { eq, getTableColumns, sql } from 'drizzle-orm';
@@ -78,6 +80,22 @@ export default async function CourseIdPage({
     }[]
   >;
 
+  const activeAttendances = await db
+    .select({
+      ...getTableColumns(attendances),
+      createdBy: sql<string>`concat(${users.firstName}, ' ', ${users.lastName})`,
+    })
+    .from(attendances)
+    .innerJoin(
+      lecturerAttendees,
+      eq(lecturerAttendees.id, attendances.lecturerAttendeeId)
+    )
+    .innerJoin(lecturers, eq(lecturers.id, lecturerAttendees.lecturerId))
+    .innerJoin(users, eq(lecturers.userId, users.id))
+    .where(
+      sql`${attendances.expires} > CURRENT_TIMESTAMP AND ${attendances.courseId} = ${course.id}`
+    );
+
   const { totalAttendance, totalLecturerAttendee, totalStudentAttendee } =
     attendanceInfo;
   const tags = [
@@ -128,6 +146,20 @@ export default async function CourseIdPage({
                   <div className="text-2xl font-bold">{tag.value}</div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+
+          <div className="mt-8">
+            {activeAttendances.map((attendance) => (
+              <div
+                key={attendance.id}
+                className="inline-flex items-center gap-x-8"
+              >
+                <div>
+                  <h4 className="uppercase text-lg">{attendance.topicTitle}</h4>
+                </div>
+                <Button>Start Attendance</Button>
+              </div>
             ))}
           </div>
         </div>

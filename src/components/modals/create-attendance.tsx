@@ -44,7 +44,7 @@ export const CreateStudentAttendance = () => {
   const form = useForm({
     resolver: zodResolver(createAttendanceSchema),
   });
-  const { execute, status } = useAction(createAttendance, {
+  const { execute, status, result } = useAction(createAttendance, {
     onSuccess: () => {
       toast.success('Attendance', {
         description: 'Attendance is created',
@@ -52,11 +52,13 @@ export const CreateStudentAttendance = () => {
       onClose();
     },
     onError: () => {
-      toast.success('Attendance', {
+      toast.error('Attendance', {
         description: 'Attendance failed while creating',
       });
     },
   });
+
+  console.log({ result });
 
   const mounted = useMount();
 

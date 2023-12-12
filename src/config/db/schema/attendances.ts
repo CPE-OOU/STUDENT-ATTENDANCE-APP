@@ -49,3 +49,5 @@ export const attendancesRelation = relations(attendances, ({ many, one }) => ({
     references: [courses.id],
   }),
 }));
+
+export type Attendance = typeof attendances.$inferSelect;
