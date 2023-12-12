@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAction } from 'next-safe-action/hook';
 import { deleteCourse } from '@/actions/courses';
 import { ClientUser } from '@/lib/auth';
+import { Button } from '@/components/ui/button';
 
 export type courseColumns = LectureBuildCoursePayload;
 export const courseColumns: ColumnDef<courseColumns>[] = [
@@ -47,8 +48,10 @@ export const courseColumns: ColumnDef<courseColumns>[] = [
 
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger>
-            <MoreHorizontal className="w-4 h-4" />
+          <DropdownMenuTrigger asChild>
+            <Button size="icon" variant="outline">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             {/* <DropDownMenu */}
