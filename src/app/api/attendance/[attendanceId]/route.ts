@@ -1,7 +1,6 @@
 import { db } from '@/config/db/client';
 import {
-  courses,
-  lecturerAttendees,
+  attendances,
   studentAttendances,
   studentAttendees,
   students,
@@ -11,7 +10,6 @@ import { createFailResponse, createSuccessResponse } from '@/lib/response';
 import { createInvalidPayloadResponse } from '@/lib/utils';
 import { StatusCodes } from 'http-status-codes';
 import { ZodError, object, string } from 'zod';
-import { generate as generateToken } from 'otp-generator';
 import { eq } from 'drizzle-orm';
 import { parsedEnv } from '@/config/env/validate';
 
@@ -20,7 +18,10 @@ const bodySchema = object({
   attendeeId: string().uuid(),
 });
 
-export const POST = async (req: Request) => {
+export const POST = async (
+  req: Request,
+  { params }: { params: Record<string, string> }
+) => {
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -33,6 +34,24 @@ export const POST = async (req: Request) => {
       );
     }
 
+    const { attendanceId } = object({ attendanceId: string().uuid() }).parse(
+      params
+    );
+
+    const [attendance] = await db
+      .select()
+      .from(attendances)
+      .where(eq(attendances.id, attendanceId));
+
+    if (!attendance) {
+      return createFailResponse(
+        {
+          title: 'Attendance',
+          message: 'This attendance is not found',
+        },
+        StatusCodes.NOT_FOUND
+      );
+    }
     const { attendeeId, captureImgUrl } = bodySchema.parse(await req.json());
 
     const [studentAttendee] = await db
@@ -99,19 +118,31 @@ export const POST = async (req: Request) => {
     }
 
     if (data['user found']) {
-      // db.insert(studentAttendances).values({attendanceId: acc})
-    }
+      await db.insert(studentAttendances).values({
+        attendanceId: attendance.id,
+        studentAttendeeId: studentAttendee.student_attendees.id,
+        joinTime: new Date(),
+        present: true,
+      });
 
-    return createSuccessResponse(
-      {
-        title: 'Get class attendees',
-        message: 'list of class attendees',
-        // data: course,
-      },
-      StatusCodes.OK
-    );
+      return createSuccessResponse(
+        {
+          title: 'Approved',
+          message: 'User marked as present',
+        },
+        StatusCodes.OK
+      );
+    } else {
+      return createFailResponse(
+        {
+          title: 'Reject',
+          message: 'User not same with captured person',
+        },
+        StatusCodes.UNAUTHORIZED
+      );
+    }
   } catch (e) {
-    console.log('[CREATE COURSE]', e);
+    console.log('[TAKE CAPTURE]', e);
     if (Object(e) === e) {
       if (e instanceof ZodError) return createInvalidPayloadResponse(e);
     }

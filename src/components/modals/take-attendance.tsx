@@ -29,7 +29,7 @@ import {
 } from '../ui/form';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { createAttendance } from '@/actions/attendance';
+import { createAttendance, verifyStudentDetail } from '@/actions/attendance';
 import { base64ToBlob, cn } from '@/lib/utils';
 import {
   Select,
@@ -70,6 +70,8 @@ export const CreateStudentAttendance = () => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) setUrl(imageSrc);
   }, [webcamRef]);
+
+  const { execute, status } = useAction(verifyStudentDetail);
 
   async function uploadCapture() {
     if (url) {

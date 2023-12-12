@@ -7,12 +7,14 @@ import {
   expiredAfter,
   studentAttendances,
   studentAttendees,
+  students,
+  users,
 } from '@/config/db/schema';
 import { action } from '@/lib/safe-action';
 import { addHours, addMinutes } from 'date-fns';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { z } from 'zod';
+import { object, string, z } from 'zod';
 
 const input = createInsertSchema(attendances, {
   topicTitle: (schema) => schema.topicTitle.min(3).max(256),
@@ -61,3 +63,17 @@ export const createAttendance = action(input, async (data) => {
 
   return attendance;
 });
+
+export const verifyStudentDetail = action(
+  object({ email: string().uuid(), courseId: string().uuid() }),
+  async ({ email, courseId }) => {
+    return db
+      .select()
+      .from(studentAttendees)
+      .innerJoin(students, eq(students.id, studentAttendees.studentId))
+      .innerJoin(users, eq(users.id, students.userId))
+      .where(
+        sql`${users.email} = ${email} AND ${studentAttendees.courseId} = ${courseId} `
+      );
+  }
+);
