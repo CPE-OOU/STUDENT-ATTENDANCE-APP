@@ -57,7 +57,7 @@ export const RecentAttendance = async () => {
       <div className="text-base font-semibold leading-5 ">
         Recent Attendance
       </div>
-      <div className="flex flex-col gap-y-2">
+      <div className="flex flex-col gap-y-2 mt-8">
         {recentAttendance.length ? (
           recentAttendance.map(
             ({ topicTitle, lectureName, lectureTitle, id, createdAt }) => (
