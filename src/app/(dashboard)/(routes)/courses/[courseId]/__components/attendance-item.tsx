@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useModal } from '@/hooks/use-modal';
+import { format } from 'date-fns';
 
 interface AttendanceItemProps {
   attendance: {
@@ -24,9 +25,14 @@ export const AttendanceItem = ({
 }: AttendanceItemProps) => {
   const { onOpen } = useModal(({ onOpen }) => ({ onOpen }));
   return (
-    <div className="inline-flex items-center gap-x-8">
+    <div className="inline-flex items-center gap-x-8 border px-8 py-6">
       <div>
-        <h4 className="uppercase text-lg">{attendance.topicTitle}</h4>
+        <h4 className="uppercase text-lg font-semibold">
+          {attendance.topicTitle}
+        </h4>
+        <p className="text-sm text-neutral-60">
+          Expired at {format(new Date(attendance.expires), 'm')}mins
+        </p>
       </div>
       {
         <Button

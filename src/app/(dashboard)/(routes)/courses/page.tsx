@@ -8,6 +8,7 @@ import {
   courses,
   lecturerAttendees,
   lecturers,
+  studentAttendees,
   users,
 } from '@/config/db/schema';
 import { sql } from 'drizzle-orm';
@@ -30,19 +31,24 @@ const LecturerPartakeCoursesPage = async ({
   if (!user) {
     return redirect('/sign-in?callbackUrl=/students');
   }
-
-  if (user.type !== 'teacher') {
-    return redirect('/');
-  }
-
   const { per_page, offset, sort } = searchParamsSchema.parse(searchParams);
+  let whereClause;
 
-  const whereClause = sql`
-  ${courses.id} in (
-      SELECT ${lecturerAttendees.courseId} FROM ${lecturerAttendees}
-      WHERE ${lecturerAttendees.lecturerId} = ${user.lecturer!.id}
-    )
-  `;
+  if (user.type === 'student') {
+    whereClause = sql`
+    ${courses.id} in (
+        SELECT ${studentAttendees.courseId} FROM ${studentAttendees}
+        WHERE ${studentAttendees.studentId} = ${user.student!.id}
+      )
+    `;
+  } else {
+    whereClause = sql`
+    ${courses.id} in (
+        SELECT ${lecturerAttendees.courseId} FROM ${lecturerAttendees}
+        WHERE ${lecturerAttendees.lecturerId} = ${user.lecturer!.id}
+      )
+    `;
+  }
 
   let parsedSort = resolveLectureViewCourseSort(sort);
 

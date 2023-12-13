@@ -21,6 +21,7 @@ export const courses = pgTable('courses', {
   creatorId: uuid('creatorId')
     .references(() => lecturers.id)
     .notNull(),
+  // attendanceTaker: uuid('attendance_taker').references(() => studentAttendees.id),
   createdAt: timestamp('created_at', {
     mode: 'date',
     withTimezone: true,
@@ -30,6 +31,7 @@ export const courses = pgTable('courses', {
 export const courseRelations = relations(courses, ({ many, one }) => ({
   lecturerAttendees: many(lecturerAttendees),
   studentAttendees: many(studentAttendees),
+  // attendanceTaker: one(studentAttendees, {fields: [courses.]})
   attendances: many(attendances),
   creator: one(lecturers, {
     fields: [courses.creatorId],

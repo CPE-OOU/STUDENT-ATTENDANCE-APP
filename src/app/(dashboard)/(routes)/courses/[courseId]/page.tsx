@@ -6,6 +6,7 @@ import {
   lecturerAttendees,
   lecturers,
   studentAttendees,
+  students,
   users,
 } from '@/config/db/schema';
 import { getCurrentUser } from '@/lib/auth';
@@ -14,10 +15,12 @@ import { notFound, redirect } from 'next/navigation';
 import { object, string } from 'zod';
 import { SideAction } from '../../account/__components/side-action';
 import postgres from 'postgres';
-import { Megaphone, Presentation, User } from 'lucide-react';
+import { ClipboardList, Megaphone, Presentation, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActionButtons } from './__components/action-button';
 import { AttendanceItem } from './__components/attendance-item';
+import { CopyInviteCode } from './__components/copy-invite-code';
+import { SelectCapturer } from './__components/choose-capturer';
 
 const courseIdParams = object({ courseId: string().uuid() });
 
@@ -31,17 +34,25 @@ export default async function CourseIdPage({
     return redirect('/sign-in?callbackUrl=/students');
   }
 
-  if (user.type !== 'teacher') {
-    return redirect('/');
+  const { courseId } = courseIdParams.parse(params);
+  let whereClause;
+
+  if (user.type === 'student') {
+    whereClause = sql`
+    ${courses.id} in (
+        SELECT ${studentAttendees.courseId} FROM ${studentAttendees}
+        WHERE ${studentAttendees.studentId} = ${user.student!.id}
+      )
+    `;
+  } else {
+    whereClause = sql`
+    ${courses.id} in (
+        SELECT ${lecturerAttendees.courseId} FROM ${lecturerAttendees}
+        WHERE ${lecturerAttendees.lecturerId} = ${user.lecturer!.id}
+      )
+    `;
   }
 
-  const { courseId } = courseIdParams.parse(params);
-  const whereClause = sql`
-  ${courses.id} in (
-      SELECT ${lecturerAttendees.courseId} FROM ${lecturerAttendees}
-      WHERE ${lecturerAttendees.lecturerId} = ${user.lecturer!.id}
-    )
-  `;
   const [course] = await db
     .select({
       ...getTableColumns(courses),
@@ -97,14 +108,25 @@ export default async function CourseIdPage({
     );
 
   let capturerAttendee: StudentAttendee | null = null;
+  const { firstName, lastName, type, imageUrl, email } = getTableColumns(users);
+  const courseStudentAttendees = await db
+    .select({
+      firstName,
+      lastName,
+      type,
+      imageUrl,
+      email,
+      ...getTableColumns(studentAttendees),
+    })
+    .from(studentAttendees)
+    .where(eq(studentAttendees.courseId, courseId))
+    .innerJoin(students, eq(studentAttendees.studentId, students.id))
+    .innerJoin(users, eq(users.id, students.userId));
+
   if (user.student) {
     [capturerAttendee] = await db.select().from(studentAttendees).where(sql`
       ${studentAttendees.courseId} = ${courseId} AND ${studentAttendees.studentId} = ${user.student.id}
     `);
-
-    if (capturerAttendee) {
-      return redirect('/');
-    }
   }
 
   const { totalAttendance, totalLecturerAttendee, totalStudentAttendee } =
@@ -130,11 +152,15 @@ export default async function CourseIdPage({
   return (
     <div>
       <div className="flex">
-        <div className="flex-1 mt-14 px-6">
-          <div className="flex mb-8 items-center justify-between">
-            <h2 className="text-3xl font-bold tracking-tight text-[#4f4d53]">
-              Course
-            </h2>
+        <div className="flex-1 mt-14 px-6 space-y-12">
+          <h2 className="text-3xl font-bold tracking-tight text-[#4f4d53] flex items-center">
+            Course
+            <CopyInviteCode course={course} />
+          </h2>
+          <div className="flex justify-between flex-col gap-y-8">
+            <h3 className="text-5xl font-bold tracking-tight text-[#4f4d53]">
+              {course.name}
+            </h3>
             <ActionButtons
               courseId={course.id}
               user={user as any}
@@ -159,6 +185,17 @@ export default async function CourseIdPage({
               </Card>
             ))}
           </div>
+
+          {/* <div>
+            <h4 className="text-2xl font-bold tracking-tight text-[#4f4d53]">
+              Assigned student for Capturing
+            </h4>
+
+            <SelectCapturer
+              data={courseStudentAttendees}
+              currentCapturerId={''}
+            />
+          </div> */}
 
           <div className="mt-8">
             {activeAttendances.map((attendance) => (

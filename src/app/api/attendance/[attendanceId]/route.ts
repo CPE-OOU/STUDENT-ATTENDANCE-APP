@@ -14,7 +14,7 @@ import { eq } from 'drizzle-orm';
 import { parsedEnv } from '@/config/env/validate';
 
 const bodySchema = object({
-  captureImgUrl: string().min(10).max(128),
+  captureImgUrl: string().min(10).max(256),
   attendeeId: string().uuid(),
 });
 
@@ -57,9 +57,9 @@ export const POST = async (
     const [studentAttendee] = await db
       .select()
       .from(studentAttendees)
-      .where(eq(studentAttendees.id, attendeeId))
-      .innerJoin(students, eq(studentAttendees.studentId, students.id));
-
+      .innerJoin(students, eq(studentAttendees.studentId, students.id))
+      .where(eq(studentAttendees.id, attendeeId));
+    console.log({ attendeeId });
     if (!studentAttendee) {
       return createFailResponse(
         {
@@ -98,6 +98,9 @@ export const POST = async (
     };
     const response = await fetch(parsedEnv.CAPTURE_VERIFICATION_SERVER, {
       method: 'POST',
+      headers: {
+        Authorization: parsedEnv.CAPTURE_API_TOKEN_VERIFICATION_SERVER,
+      },
       body: JSON.stringify({
         records: captures,
         image: captureImgUrl,
@@ -105,9 +108,23 @@ export const POST = async (
       }),
     });
 
-    const data: FacialSuccess | FacialFail = await response.json();
+    const data: FacialSuccess | FacialFail | null =
+      response.headers.get('Content-Type') === 'application/json'
+        ? await response.json()
+        : null;
 
-    if (data.status === 'failed') {
+    if (!data) {
+      return createFailResponse(
+        {
+          title: 'Capture',
+          message:
+            'Sorry the server is unable to handle capturing at the moment',
+        },
+        StatusCodes.BAD_GATEWAY
+      );
+    }
+
+    if (data?.status === 'failed') {
       return createFailResponse(
         {
           title: 'Attendee',

@@ -38,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
 import Webcam from 'react-webcam';
@@ -54,9 +54,11 @@ export const TakeStudentAttendance = () => {
 
   const mounted = useMount();
 
-  const [attendee] = useState<{ email: string; attendeeId: string } | null>(
-    null
-  );
+  const [attendee, setAttendee] = useState<{
+    fullName: string;
+    email: string;
+    attendeeId: string;
+  } | null>(null);
 
   const modalData = useModal(({ data }) => data);
   const formSchema = object({ email: string().email() });
@@ -75,33 +77,57 @@ export const TakeStudentAttendance = () => {
   const {
     execute: executeVerifyEmail,
     status: verifyEmailStatus,
-    result,
-  } = useAction(verifyStudentDetail);
+    reset,
+  } = useAction(verifyStudentDetail, {
+    onSuccess: (data) => {
+      if (data.length === 0) {
+        toast.error('Student Record', {
+          description: 'User not a student taking this course',
+        });
+      } else {
+        const [attendee] = data;
+        setAttendee({
+          fullName: `${attendee.user.firstName} ${attendee.user.lastName}`,
+          email: attendee.user.email,
+          attendeeId: attendee.student_attendees.id,
+        });
+        toast.success('Student Record', { description: 'User record found' });
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (!opened) {
+      reset();
+      setUrl(null);
+      setAttendee(null);
+    }
+  }, [opened]);
+
   const [serverVerifyingId, setServerVerifyingId] = useState(false);
-  console.log({ verifyEmailStatus, result });
 
   async function verifyUserId() {
     try {
       setServerVerifyingId(true);
       if (url) {
-        const { id: userId, firstName, lastName } = modalData?.user!;
-        const fileName = `${firstName}-${lastName}-${new Date().toISOString()}`;
+        const { attendeeId, email, fullName } = attendee!;
+        const fileName = `${fullName}-${email}-${new Date().toISOString()}`;
         const file = new File([await base64ToBlob(url)], fileName);
-        const { data } = await supabase.storage
+        await supabase.storage
           .from('images')
           .upload(
-            `user/${userId}/captures/${firstName}-${lastName}-${new Date().toISOString()}.jpeg`,
+            `user/verify/${attendeeId}/captures/${email}-${new Date().toISOString()}.jpeg`,
             file
           );
         const {
           data: { publicUrl },
         } = supabase.storage.from('images').getPublicUrl(`profile/${fileName}`);
-        const { id, attendanceCapturerId } = modalData?.takeAttendanceData!;
+        const { id } = modalData?.takeAttendanceData!;
         const response = await fetch(`/api/attendance/${id}`, {
           method: 'POST',
           body: JSON.stringify({
             captureImgUrl: publicUrl,
-            attendeeId: attendanceCapturerId,
+            attendeeId,
           }),
         });
 
@@ -115,6 +141,7 @@ export const TakeStudentAttendance = () => {
         }
       }
     } catch (e) {
+      console.log(e);
       toast.success('Error', {
         description: 'An error occur while taking ur attendance verification',
       });
@@ -123,7 +150,6 @@ export const TakeStudentAttendance = () => {
     }
   }
 
-  console.log({ data: modalData?.takeAttendanceData, type });
   if (
     !(mounted && modalData?.takeAttendanceData && type === 'take-attendance')
   ) {
@@ -146,9 +172,12 @@ export const TakeStudentAttendance = () => {
           </DialogDescription>
         </DialogHeader>
         <Separator />
-        <div className="px-6 rounded-sm overflow-hidden space-y-6">
+        <div className="rounded-sm overflow-hidden space-y-6 pb-8">
           {attendee ? (
             <div className="px-6 rounded-sm overflow-hidden space-y-6">
+              <p className="text-xl font-semibold mb-8 leading-[120%]">
+                {attendee.fullName}
+              </p>
               {url ? (
                 <div className="relative w-[462px] h-[346px]">
                   <Image src={url} alt="Screenshot" fill />
@@ -175,7 +204,7 @@ export const TakeStudentAttendance = () => {
                       <Loader2
                         className={cn(
                           'w-5 h-5 animate-spin hidden ml-2',
-                          verifyEmailStatus === 'executing' && 'block'
+                          serverVerifyingId && 'block'
                         )}
                       />
                     </Button>
@@ -193,6 +222,7 @@ export const TakeStudentAttendance = () => {
                     courseId: takeAttendanceData?.courseId!,
                   });
                 })}
+                className="px-6"
               >
                 <FormField
                   name="email"
@@ -225,7 +255,7 @@ export const TakeStudentAttendance = () => {
                     <Loader2
                       className={cn(
                         'w-5 h-5 animate-spin hidden ml-2',
-                        serverVerifyingId && 'block'
+                        verifyEmailStatus === 'executing' && 'block'
                       )}
                     />
                   </Button>
