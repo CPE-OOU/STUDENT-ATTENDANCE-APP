@@ -12,6 +12,7 @@ import { StatusCodes } from 'http-status-codes';
 import { ZodError, object, string } from 'zod';
 import { eq } from 'drizzle-orm';
 import { parsedEnv } from '@/config/env/validate';
+import axios from 'axios';
 
 const bodySchema = object({
   captureImgUrl: string().min(10).max(256),
@@ -96,22 +97,32 @@ export const POST = async (
       status: 'failed';
       message: string;
     };
-    const response = await fetch(parsedEnv.CAPTURE_VERIFICATION_SERVER, {
-      method: 'POST',
-      headers: {
-        Authorization: parsedEnv.CAPTURE_API_TOKEN_VERIFICATION_SERVER,
-      },
-      body: JSON.stringify({
-        records: captures,
-        image: captureImgUrl,
-        excemption: [],
-      }),
+
+    console.log({
+      records: captures,
+      image: captureImgUrl,
+      tolerance: 0.6,
+      excemption: [],
     });
 
-    const data: FacialSuccess | FacialFail | null =
-      response.headers.get('Content-Type') === 'application/json'
-        ? await response.json()
-        : null;
+    const response = await axios.post(
+      `${parsedEnv.CAPTURE_VERIFICATION_SERVER}/recognise`,
+      {
+        records: captures,
+        image: captureImgUrl,
+        tolerance: 0.6,
+        excemption: [],
+      },
+
+      {
+        headers: {
+          Authorization: `Bearer ${parsedEnv.CAPTURE_API_TOKEN_VERIFICATION_SERVER}`,
+        },
+      }
+    );
+
+    const data: FacialSuccess | FacialFail | null = response.data;
+    console.log(data);
 
     if (!data) {
       return createFailResponse(

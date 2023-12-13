@@ -12,11 +12,14 @@ const input = object({
 });
 
 export const updateCapture = action(input, async function updateCapture(data) {
+  console.log(data);
   const [student] = await db
     .update(students)
     .set({ captures: [data.captureUrl] })
     .where(eq(students.userId, data.userId))
     .returning();
+
+  console.log(student);
 
   return { student };
 });

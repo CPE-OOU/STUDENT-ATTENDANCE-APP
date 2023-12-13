@@ -113,7 +113,7 @@ export const TakeStudentAttendance = () => {
         const { attendeeId, email, fullName } = attendee!;
         const fileName = `${fullName}-${email}-${new Date().toISOString()}`;
         const file = new File([await base64ToBlob(url)], fileName);
-        await supabase.storage
+        const { data } = await supabase.storage
           .from('images')
           .upload(
             `user/verify/${attendeeId}/captures/${email}-${new Date().toISOString()}.jpeg`,
@@ -121,7 +121,7 @@ export const TakeStudentAttendance = () => {
           );
         const {
           data: { publicUrl },
-        } = supabase.storage.from('images').getPublicUrl(`profile/${fileName}`);
+        } = supabase.storage.from('images').getPublicUrl(data?.path!);
         const { id } = modalData?.takeAttendanceData!;
         const response = await fetch(`/api/attendance/${id}`, {
           method: 'POST',

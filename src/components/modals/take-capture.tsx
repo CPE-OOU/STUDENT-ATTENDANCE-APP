@@ -66,9 +66,10 @@ export const TakeCaptureModal = () => {
           `user/${id}/captures/${firstName}-${lastName}-${new Date().toISOString()}.jpeg`,
           file
         );
+
       const {
         data: { publicUrl },
-      } = supabase.storage.from('images').getPublicUrl(`profile/${fileName}`);
+      } = supabase.storage.from('images').getPublicUrl(data?.path!);
       await execute({ captureUrl: publicUrl, userId: id });
     }
   }
