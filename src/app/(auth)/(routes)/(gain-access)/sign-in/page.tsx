@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useGlobalState } from '@/hooks/use-global-state';
 import { useProfile } from '@/queries/use-profile';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = object({
   email: string().email(),
@@ -58,29 +59,40 @@ export default function SigninPage() {
 
   async function onSubmit(formData: SigninFormData) {
     try {
-      await signIn('credentials', {
+      const signInResponse = await signIn('credentials', {
         redirect: false,
         ...formData,
       });
 
-      const { data, isError } = await refetch();
-      if (!isError) return router.refresh();
-
-      form.reset();
-      toast.success('Welcome back. Login successful', { duration: 2000 });
-      if (!data) throw new Error('An error occured');
-
-      const { data: userData } = data;
-
-      if (!userData.emailVerified) {
-        router.push('/verify-account?mode=request&type=account-verify');
-      } else if (userData.setting.setupCompleted) {
-        if (userData.student || userData.lecturer) {
-          return router.push('/set-up');
+      console.log({ signInResponse });
+      if (signInResponse) {
+        if (signInResponse.error) {
+          toast.error('Sign In', {
+            description: signInResponse.error.toString(),
+          });
+          return;
         }
-        return router.push(authRedirectUrl ?? '/');
+
+        const { data, isError } = await refetch();
+        if (isError) {
+          throw new Error('An error occurred while signing in. Kindly refresh');
+        }
+        form.reset();
+
+        toast.success('Welcome back. Login successful', { duration: 2000 });
+        const { data: userData } = data!;
+        if (!userData.emailVerified) {
+          router.push('/verify-account?mode=request&type=account-verify');
+        } else if (userData.setting.setupCompleted) {
+          if (userData.student || userData.lecturer) {
+            return router.push('/set-up');
+          }
+          return router.push(authRedirectUrl ?? '/');
+        }
+        throw new Error('Unhandled authenication');
       }
     } catch (e) {
+      console.log({ signError: e });
       if (Object(e) === e && e instanceof Error) {
         if (!/internal/i.test(e.message)) {
           toast.error('Failed sign in attempt', {
@@ -174,6 +186,9 @@ export default function SigninPage() {
                     disabled={!form.formState.isValid || isSubmitting}
                   >
                     Submit
+                    {isSubmitting && (
+                      <Loader2 className="w-5 h-5 animate-spin ml-2" />
+                    )}
                   </Button>
                 </div>
               </form>

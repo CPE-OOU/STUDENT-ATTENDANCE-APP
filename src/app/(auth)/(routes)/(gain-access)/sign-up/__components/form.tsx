@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
 import { useGlobalState } from '@/hooks/use-global-state';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 export const clientCreateNewUserValidator = object({
   firstName: string().min(1).max(64),
@@ -169,6 +170,7 @@ export function SignUpForm() {
             disabled={!form.formState.isValid || isSubmitting}
           >
             Submit
+            {isSubmitting && <Loader2 className="w-5 h-5 animate-spin ml-2" />}
           </Button>
         </form>
       </Form>

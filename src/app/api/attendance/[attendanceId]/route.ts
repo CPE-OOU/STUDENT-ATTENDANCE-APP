@@ -98,13 +98,6 @@ export const POST = async (
       message: string;
     };
 
-    console.log({
-      records: captures,
-      image: captureImgUrl,
-      tolerance: 0.6,
-      excemption: [],
-    });
-
     const response = await axios.post(
       `${parsedEnv.CAPTURE_VERIFICATION_SERVER}/recognise`,
       {
