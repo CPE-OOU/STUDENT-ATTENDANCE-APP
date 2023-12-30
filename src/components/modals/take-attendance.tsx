@@ -13,7 +13,7 @@ import { useMount } from '@/hooks/use-mouted';
 import { Separator } from '../ui/separator';
 
 import { useAction } from 'next-safe-action/hook';
-import { Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,6 +43,7 @@ import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
 import Webcam from 'react-webcam';
 import { FailedServerResponsePayload } from '@/lib/response';
+//<CheckCircle />
 
 const videoConstraints = {
   width: 540,
@@ -58,7 +59,11 @@ export const TakeStudentAttendance = () => {
     fullName: string;
     email: string;
     attendeeId: string;
+    level: string;
+    department: string;
   } | null>(null);
+  const [attendanceApprove, setAttendanceApprove] = useState(false);
+  const [attendanceDisapprove, setAttendanceDisapprove] = useState(false);
 
   const modalData = useModal(({ data }) => data);
   const formSchema = object({ email: string().email() });
@@ -90,6 +95,8 @@ export const TakeStudentAttendance = () => {
           fullName: `${attendee.user.firstName} ${attendee.user.lastName}`,
           email: attendee.user.email,
           attendeeId: attendee.student_attendees.id,
+          level: attendee.students.level,
+          department: attendee.students.department,
         });
         toast.success('Student Record', { description: 'User record found' });
       }
@@ -101,10 +108,20 @@ export const TakeStudentAttendance = () => {
       reset();
       setUrl(null);
       setAttendee(null);
+      setAttendanceApprove(false);
     }
   }, [opened]);
 
   const [serverVerifyingId, setServerVerifyingId] = useState(false);
+
+  useEffect(() => {
+    if (attendanceDisapprove) {
+      setTimeout(() => {
+        setAttendanceDisapprove(false);
+        setUrl(null);
+      }, 2000);
+    }
+  }, [attendanceDisapprove]);
 
   async function verifyUserId() {
     try {
@@ -141,7 +158,7 @@ export const TakeStudentAttendance = () => {
         }
       }
     } catch (e) {
-      console.log(e);
+      setAttendanceDisapprove(true);
       toast.success('Error', {
         description: 'An error occur while taking ur attendance verification',
       });
@@ -175,42 +192,78 @@ export const TakeStudentAttendance = () => {
         <div className="rounded-sm overflow-hidden space-y-6 pb-8">
           {attendee ? (
             <div className="px-6 rounded-sm overflow-hidden space-y-6">
-              <p className="text-xl font-semibold mb-8 leading-[120%]">
-                {attendee.fullName}
-              </p>
-              {url ? (
-                <div className="relative w-[462px] h-[346px]">
-                  <Image src={url} alt="Screenshot" fill />
+              <div className="space-y-4">
+                <div className="flex items-center gap-x-8">
+                  <h5 className="text-sm uppercase leading-[160%] font-semibold text-neutral-700">
+                    Student Name
+                  </h5>
+                  <p className="text-lg font-semibold  leading-[120%]">
+                    {attendee.fullName}
+                  </p>
+                </div>
+                <div className="flex items-center gap-x-8">
+                  <h5 className="text-sm uppercase leading-[160%] font-semibold text-neutral-700">
+                    Student Department
+                  </h5>
+                  <p className="text-lg font-semibold  leading-[120%]">
+                    {attendee.department}
+                  </p>
+                </div>
+                <div className="flex items-center gap-x-8">
+                  <h5 className="text-sm uppercase leading-[160%] font-semibold text-neutral-700">
+                    Student Level
+                  </h5>
+                  <p className="text-lg font-semibold  leading-[120%]">
+                    {attendee.level}
+                  </p>
+                </div>
+              </div>
+              {attendanceApprove ? (
+                <div className="h-[324px] flex items-center justify-center">
+                  <CheckCircle className="w-12 h-12 text-green-600 fill-green-600" />
                 </div>
               ) : (
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  disablePictureInPicture
-                  screenshotFormat="image/jpeg"
-                  videoConstraints={videoConstraints}
-                />
-              )}
-              <div className="flex items-center justify-center mb-12">
-                {!url ? (
-                  <Button onClick={capturePhoto}>Capture</Button>
-                ) : (
-                  <div className="flex items-center gap-x-2">
-                    <Button variant="outline" onClick={() => setUrl(null)}>
-                      Retake
-                    </Button>
-                    <Button onClick={verifyUserId} className="items-center">
-                      Verify
-                      <Loader2
-                        className={cn(
-                          'w-5 h-5 animate-spin hidden ml-2',
-                          serverVerifyingId && 'block'
-                        )}
-                      />
-                    </Button>
+                <>
+                  {url ? (
+                    <div
+                      className={cn(
+                        'relative w-[462px] h-[346px]',
+                        attendanceDisapprove && 'border-rose-700 border-2'
+                      )}
+                    >
+                      <Image src={url} alt="Screenshot" fill />
+                    </div>
+                  ) : (
+                    <Webcam
+                      ref={webcamRef}
+                      audio={false}
+                      disablePictureInPicture
+                      screenshotFormat="image/jpeg"
+                      videoConstraints={videoConstraints}
+                    />
+                  )}
+                  <div className="flex items-center justify-center mb-12">
+                    {!url ? (
+                      <Button onClick={capturePhoto}>Capture</Button>
+                    ) : (
+                      <div className="flex items-center gap-x-2">
+                        <Button variant="outline" onClick={() => setUrl(null)}>
+                          Retake
+                        </Button>
+                        <Button onClick={verifyUserId} className="items-center">
+                          Verify
+                          <Loader2
+                            className={cn(
+                              'w-5 h-5 animate-spin hidden ml-2',
+                              serverVerifyingId && 'block'
+                            )}
+                          />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              )}
             </div>
           ) : (
             <Form {...form}>

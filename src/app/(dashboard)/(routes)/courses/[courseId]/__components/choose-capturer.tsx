@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -28,6 +28,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { useAction } from 'next-safe-action/hook';
+import { setCapturer } from '@/actions/attendance';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 const FormSchema = z.object({
   courseCapturer: z.string({}).uuid(),
@@ -36,11 +40,13 @@ const FormSchema = z.object({
 export function SelectCapturer({
   data,
   currentCapturerId,
+  courseId,
+  attendanceId,
 }: {
   currentCapturerId?: string;
   data: {
     id: string;
-    studentId: string | null;
+    studentId: string;
     courseId: string | null;
     suspended: boolean | null;
     createdAt: Date | null;
@@ -50,21 +56,57 @@ export function SelectCapturer({
     imageUrl: string | null;
     email: string;
   }[];
+
+  courseId: string;
+  attendanceId: string;
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    defaultValues: { courseCapturer: currentCapturerId! },
   });
 
+  const {
+    execute: setStudentCapturer,
+    status,
+    result,
+  } = useAction(setCapturer, {
+    onSuccess: (data) => {
+      if (data) {
+        toast.success('Capturer', {
+          description: `${data.firstName} ${data.lastName} as being set to take capturing`,
+        });
+      } else {
+        toast.error('Capturer', {
+          description: 'An error occurred while setting capturer',
+        });
+      }
+    },
+    onError: () => {
+      toast.error('Capturer', {
+        description: 'An error occurred while setting capturer',
+      });
+    },
+  });
+
+  const [openModal, setOpenModal] = useState(false);
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(() => {})} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(({ courseCapturer }) => {
+          setStudentCapturer({
+            studentAttendeeId: courseCapturer,
+            courseId,
+            attendanceId,
+          });
+        })}
+        className="flex items-center gap-x-4"
+      >
         <FormField
           control={form.control}
           name="courseCapturer"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Select the attendance capturer</FormLabel>
-              <Popover>
+              <Popover open={openModal} onOpenChange={setOpenModal}>
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
@@ -84,8 +126,10 @@ export function SelectCapturer({
                 </PopoverTrigger>
                 <PopoverContent className="w-[200px] p-0">
                   <Command>
-                    <CommandInput placeholder="Search language..." />
-                    <CommandEmpty>No language found.</CommandEmpty>
+                    <CommandInput placeholder="Search for student name" />
+                    <CommandEmpty>
+                      No Student with such name found.
+                    </CommandEmpty>
                     <CommandGroup>
                       {data.map((person) => (
                         <CommandItem
@@ -93,6 +137,7 @@ export function SelectCapturer({
                           key={person.id}
                           onSelect={() => {
                             form.setValue('courseCapturer', person.id);
+                            setOpenModal(false);
                           }}
                         >
                           <Check
@@ -103,7 +148,7 @@ export function SelectCapturer({
                                 : 'opacity-0'
                             )}
                           />
-                          {person.firstName} ${person.lastName}
+                          {person.firstName} {person.lastName}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -114,7 +159,12 @@ export function SelectCapturer({
             </FormItem>
           )}
         />
-        <Button type="submit">Submit</Button>
+        <Button type="submit">
+          Set
+          {status === 'executing' && (
+            <Loader2 className="w-5 h-5 animate-spin ml-2" />
+          )}
+        </Button>
       </form>
     </Form>
   );

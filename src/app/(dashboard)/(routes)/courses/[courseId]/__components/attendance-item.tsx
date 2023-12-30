@@ -2,7 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { useModal } from '@/hooks/use-modal';
-import { format } from 'date-fns';
+import { differenceInMinutes, format } from 'date-fns';
+import { SelectCapturer } from './choose-capturer';
 
 interface AttendanceItemProps {
   attendance: {
@@ -16,39 +17,69 @@ interface AttendanceItemProps {
     expires: Date;
     createdAt: Date | null;
   };
-  attendanceCapturerId?: string | undefined;
+  courseAttendees: {
+    id: string;
+    studentId: string;
+    courseId: string | null;
+    suspended: boolean | null;
+    createdAt: Date | null;
+    firstName: string;
+    lastName: string;
+    type: 'student' | 'teacher' | null;
+    imageUrl: string | null;
+    email: string;
+  }[];
+
+  lectureAttendeeId?: string;
+  currentCapturerId?: string;
 }
 
 export const AttendanceItem = ({
   attendance,
-  attendanceCapturerId,
+  courseAttendees,
+  lectureAttendeeId,
+  currentCapturerId,
 }: AttendanceItemProps) => {
   const { onOpen } = useModal(({ onOpen }) => ({ onOpen }));
+  const dateDiffInMins = differenceInMinutes(
+    new Date(attendance.expires),
+    Date.now()
+  );
+  if (dateDiffInMins < 1) return null;
   return (
-    <div className="inline-flex items-center gap-x-8 border px-8 py-6">
+    <div className="flex items-start justify-between border px-8 py-6">
       <div>
         <h4 className="uppercase text-lg font-semibold">
           {attendance.topicTitle}
         </h4>
         <p className="text-sm text-neutral-60">
-          Expired at {format(new Date(attendance.expires), 'm')}mins
+          Expires in {dateDiffInMins} mins
         </p>
       </div>
-      {
-        <Button
-          onClick={() => {
-            onOpen('take-attendance', {
-              takeAttendanceData: {
-                id: attendance.id,
-                courseId: attendance.courseId,
-                attendanceCapturerId: 'b6416c2d-fbef-4434-b954-29138bed7f74',
-              },
-            });
-          }}
-        >
-          Start Attendance
-        </Button>
-      }
+      <div>
+        {lectureAttendeeId ? (
+          <SelectCapturer
+            data={courseAttendees}
+            {...(currentCapturerId && { currentCapturerId })}
+            attendanceId={attendance.id}
+            courseId={attendance.courseId}
+          />
+        ) : currentCapturerId ? (
+          <Button
+            onClick={() => {
+              onOpen('take-attendance', {
+                takeAttendanceData: {
+                  id: attendance.id,
+                  courseId: attendance.courseId,
+                  attendanceCapturerId: currentCapturerId,
+                },
+              });
+            }}
+          >
+            Start Attendance
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 };

@@ -4,6 +4,7 @@ import { db } from '@/config/db/client';
 import {
   Attendance,
   attendances,
+  courses,
   expiredAfter,
   studentAttendances,
   studentAttendees,
@@ -12,7 +13,7 @@ import {
 } from '@/config/db/schema';
 import { action } from '@/lib/safe-action';
 import { addHours, addMinutes } from 'date-fns';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and, getTableColumns } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { object, string, z } from 'zod';
 
@@ -30,7 +31,7 @@ const input = createInsertSchema(attendances, {
 
 export const createAttendance = action(input, async (data) => {
   const [, value, duration] = data.expiredAfter!.match(/(\d+)(.*)/)!;
-
+  console.log({ value, duration });
   const attendance = await db.transaction(async (tx) => {
     const now = new Date();
     let expires;
@@ -72,8 +73,59 @@ export const verifyStudentDetail = action(
       .from(studentAttendees)
       .innerJoin(students, eq(students.id, studentAttendees.studentId))
       .innerJoin(users, eq(users.id, students.userId))
+      .innerJoin(courses, eq(courses.id, studentAttendees.courseId))
       .where(
         sql`${users.email} = ${email} AND ${studentAttendees.courseId} = ${courseId} `
       );
+  }
+);
+
+export const setCapturer = action(
+  object({
+    studentAttendeeId: string().uuid(),
+    attendanceId: string().uuid(),
+    courseId: string().uuid(),
+  }),
+  async ({ studentAttendeeId, attendanceId, courseId }) => {
+    if (
+      !(
+        await db
+          .select()
+          .from(studentAttendees)
+          .where(
+            and(
+              eq(studentAttendees.courseId, courseId),
+              eq(studentAttendees.id, studentAttendeeId)
+            )
+          )
+      ).length
+    ) {
+      throw new Error('User no longer a registered student for this course');
+    }
+    await db
+      .update(attendances)
+      .set({ attendanceCapturerId: studentAttendeeId })
+      .where(eq(attendances.id, attendanceId));
+
+    const { firstName, lastName, email, id: userId } = getTableColumns(users);
+    const { studentId } = getTableColumns(studentAttendees);
+
+    return (
+      await db
+        .select({
+          firstName,
+          lastName,
+          email,
+          id: userId,
+          studentId,
+        })
+        .from(studentAttendees)
+        .innerJoin(
+          users,
+          sql`${users.id} = (SELECT ${students.userId} FROM ${students}
+                            WHERE ${students.id} = ${studentId})`
+        )
+        .where(eq(studentAttendees.id, studentAttendeeId))
+    ).pop();
   }
 );

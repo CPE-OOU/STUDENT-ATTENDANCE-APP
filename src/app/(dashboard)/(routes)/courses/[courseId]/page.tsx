@@ -21,6 +21,8 @@ import { ActionButtons } from './__components/action-button';
 import { AttendanceItem } from './__components/attendance-item';
 import { CopyInviteCode } from './__components/copy-invite-code';
 import { SelectCapturer } from './__components/choose-capturer';
+import { Button } from '@/components/ui/button';
+import { ActiveAttendanceItem } from '@/components/active-attendance-item';
 
 const courseIdParams = object({ courseId: string().uuid() });
 
@@ -107,7 +109,6 @@ export default async function CourseIdPage({
       sql`${attendances.expires} > CURRENT_TIMESTAMP AND ${attendances.courseId} = ${course.id}`
     );
 
-  let capturerAttendee: StudentAttendee | null = null;
   const { firstName, lastName, type, imageUrl, email } = getTableColumns(users);
   const courseStudentAttendees = await db
     .select({
@@ -123,29 +124,26 @@ export default async function CourseIdPage({
     .innerJoin(students, eq(studentAttendees.studentId, students.id))
     .innerJoin(users, eq(users.id, students.userId));
 
-  if (user.student) {
-    [capturerAttendee] = await db.select().from(studentAttendees).where(sql`
-      ${studentAttendees.courseId} = ${courseId} AND ${studentAttendees.studentId} = ${user.student.id}
-    `);
-  }
-
   const { totalAttendance, totalLecturerAttendee, totalStudentAttendee } =
     attendanceInfo;
   const tags = [
     {
       title: 'No of attendance taken',
       value: totalAttendance,
-      icon: <Megaphone className="w-4 h-4 text-muted-foreground" />,
+      icon: <Megaphone className="w-8 h-8 text-muted-foreground" />,
+      path: `/courses/${course.id}/attendances`,
     },
     {
       title: 'Assigned Lecturer No',
       value: totalLecturerAttendee,
-      icon: <Presentation className="w-4 h-4 text-muted-foreground" />,
+      icon: <Presentation className="w-8 h-8 text-muted-foreground" />,
+      path: `/couses/${course.id}/attendees?role=lecturer`,
     },
     {
       title: 'Registered student no',
       value: totalStudentAttendee,
-      icon: <User className="w-4 h-4 text-muted-foreground" />,
+      icon: <User className="w-8 h-8 text-muted-foreground" />,
+      path: `/couses/${course.id}/attendees?role=student`,
     },
   ];
 
@@ -171,22 +169,11 @@ export default async function CourseIdPage({
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {tags.map((tag) => (
-              <Card key={tag.title}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {tag.title}
-                  </CardTitle>
-
-                  {tag.icon}
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{tag.value}</div>
-                </CardContent>
-              </Card>
+              <ActiveAttendanceItem {...tag} key={tag.path} />
             ))}
           </div>
-
-          {/* <div>
+          {/* 
+          <div className="space-y-4">
             <h4 className="text-2xl font-bold tracking-tight text-[#4f4d53]">
               Assigned student for Capturing
             </h4>
@@ -194,16 +181,28 @@ export default async function CourseIdPage({
             <SelectCapturer
               data={courseStudentAttendees}
               currentCapturerId={''}
+              attendanceId=
             />
           </div> */}
 
-          <div className="mt-8">
-            {activeAttendances.map((attendance) => (
-              <AttendanceItem
-                attendance={attendance}
-                attendanceCapturerId={capturerAttendee?.id}
-              />
-            ))}
+          <div className="mt-8 space-y-4">
+            <h3 className="text-2xl font-bold tracking-tight text-[#4f4d53] flex items-center">
+              Active Running Attendance
+            </h3>
+            <div>
+              {activeAttendances.map((attendance) => (
+                <AttendanceItem
+                  attendance={attendance}
+                  courseAttendees={courseStudentAttendees as any}
+                  {...(course.lecturerAttendee && {
+                    lectureAttendeeId: course.lecturerAttendee.id,
+                  })}
+                  {...(attendance.attendanceCapturerId && {
+                    currentCapturerId: attendance.attendanceCapturerId,
+                  })}
+                />
+              ))}
+            </div>
           </div>
         </div>
         <div className="flex-shrink-0 w-[480px] ">
