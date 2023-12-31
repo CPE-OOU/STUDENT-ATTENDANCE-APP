@@ -27,7 +27,7 @@ const lecturerRoutes = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: BarChartBig, label: 'Attendance', href: '/attendance' },
   { icon: Book, label: 'My Course', href: '/courses' },
-  { icon: Database, label: 'Database', href: '/students' },
+  { icon: Database, label: 'Database', href: '/database' },
   { icon: User, label: 'My Accounts', href: '/account' },
 ];
 

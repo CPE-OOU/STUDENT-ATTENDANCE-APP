@@ -22,7 +22,7 @@ import { AttendanceItem } from './__components/attendance-item';
 import { CopyInviteCode } from './__components/copy-invite-code';
 import { SelectCapturer } from './__components/choose-capturer';
 import { Button } from '@/components/ui/button';
-import { ActiveAttendanceItem } from '@/components/active-attendance-item';
+import { CourseInfoCard } from '@/components/active-attendance-item';
 
 const courseIdParams = object({ courseId: string().uuid() });
 
@@ -137,13 +137,13 @@ export default async function CourseIdPage({
       title: 'Assigned Lecturer No',
       value: totalLecturerAttendee,
       icon: <Presentation className="w-8 h-8 text-muted-foreground" />,
-      path: `/couses/${course.id}/attendees?role=lecturer`,
+      path: `/database/couses/${course.id}/attendees?role=lecturer`,
     },
     {
       title: 'Registered student no',
       value: totalStudentAttendee,
       icon: <User className="w-8 h-8 text-muted-foreground" />,
-      path: `/couses/${course.id}/attendees?role=student`,
+      path: `/database/couses/${course.id}/attendees?role=student`,
     },
   ];
 
@@ -169,21 +169,9 @@ export default async function CourseIdPage({
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {tags.map((tag) => (
-              <ActiveAttendanceItem {...tag} key={tag.path} />
+              <CourseInfoCard {...tag} key={tag.path} />
             ))}
           </div>
-          {/* 
-          <div className="space-y-4">
-            <h4 className="text-2xl font-bold tracking-tight text-[#4f4d53]">
-              Assigned student for Capturing
-            </h4>
-
-            <SelectCapturer
-              data={courseStudentAttendees}
-              currentCapturerId={''}
-              attendanceId=
-            />
-          </div> */}
 
           <div className="mt-8 space-y-4">
             <h3 className="text-2xl font-bold tracking-tight text-[#4f4d53] flex items-center">

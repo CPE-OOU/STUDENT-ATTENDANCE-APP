@@ -4,14 +4,14 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 
-interface ActiveAttendanceItemProps {
+interface CourseInfoCardProps {
   title: string;
   icon: React.ReactNode;
   value: number | string;
   path: string;
 }
 
-export const ActiveAttendanceItem: React.FC<ActiveAttendanceItemProps> = ({
+export const CourseInfoCard: React.FC<CourseInfoCardProps> = ({
   title,
   value,
   path,

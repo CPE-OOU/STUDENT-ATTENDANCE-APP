@@ -35,42 +35,35 @@ export const ActionButtons = ({
   });
   return (
     <div>
-      {
-        user.lecturer ? (
-          <div className="flex items-center gap-x-6">
-            <Button
-              onClick={() => {
-                execute({ courseId });
-              }}
-              variant="outline"
-              disabled={status === 'executing'}
-            >
-              Generate Invite Link
-              <Loader2
-                className={cn(
-                  'w-6 h-6 animate-spin hidden ml-4',
-                  status === 'executing' && 'block'
-                )}
-              />
-            </Button>
-            <Button
-              disabled={status === 'executing'}
-              onClick={() => {
-                onOpen('create-attendance', {
-                  createAttendanceData: { courseId, lecturerAttendeeId },
-                });
-              }}
-            >
-              Create new attendance
-            </Button>
-          </div>
-        ) : null
-        //    assignedStudentId && assignedStudentId === user.student?.id ? (
-        //     <Button onClick={() => onOpen('take-attendance')}>
-        //       Take Attendance
-        //     </Button>
-        //   ) : null
-      }
+      {user.lecturer ? (
+        <div className="flex items-center gap-x-6">
+          <Button
+            onClick={() => {
+              execute({ courseId });
+            }}
+            variant="outline"
+            disabled={status === 'executing'}
+          >
+            Generate Invite Link
+            <Loader2
+              className={cn(
+                'w-6 h-6 animate-spin hidden ml-4',
+                status === 'executing' && 'block'
+              )}
+            />
+          </Button>
+          <Button
+            disabled={status === 'executing'}
+            onClick={() => {
+              onOpen('create-attendance', {
+                createAttendanceData: { courseId, lecturerAttendeeId },
+              });
+            }}
+          >
+            Create new attendance
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };
