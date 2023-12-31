@@ -16,7 +16,6 @@ export default async function AttendeeRecordPage() {
   const user = await getCurrentUser();
   const url = headers().get('referer');
 
-  console.log({ url });
   if (!user) {
     return redirect(`/sign-in?callbackUrl=${url}`);
   }

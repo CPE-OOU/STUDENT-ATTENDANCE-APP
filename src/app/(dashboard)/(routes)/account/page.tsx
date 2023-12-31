@@ -53,9 +53,6 @@ const MyAccountPage = async () => {
           </div>
         </div>
       </ScrollArea>
-      <div className="flex-shrink-0 w-[480px]">
-        <SideAction user={user} />
-      </div>
     </div>
   );
 };

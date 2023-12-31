@@ -19,13 +19,14 @@ interface Route {
 }
 const studentRoutes: Array<Route> = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+  { icon: BarChartBig, label: 'Attendance', href: '/attendances' },
   { icon: Book, label: 'My Course', href: '/courses' },
   { icon: User, label: 'My Accounts', href: '/account' },
 ];
 
 const lecturerRoutes = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: BarChartBig, label: 'Attendance', href: '/attendance' },
+  { icon: BarChartBig, label: 'Attendance', href: '/attendances' },
   { icon: Book, label: 'My Course', href: '/courses' },
   { icon: Database, label: 'Database', href: '/database' },
   { icon: User, label: 'My Accounts', href: '/account' },

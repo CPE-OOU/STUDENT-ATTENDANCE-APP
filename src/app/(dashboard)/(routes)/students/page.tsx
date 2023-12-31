@@ -109,9 +109,8 @@ const LectureStudentAttendeePage = async ({
   }
 
   const missingCourse = courseId && !!currentAttendanceCourse;
-  console.log({ missingCourse });
   return (
-    <div className="flex h-full">
+    <div className="h-full">
       <div className="flex-grow flex flex-col pt-[65px] px-8 h-full">
         <div className="flex justify-between mb-12">
           <h3 className="text-2xl leading-7">Student Records</h3>
@@ -125,9 +124,6 @@ const LectureStudentAttendeePage = async ({
             columns={studentColumns}
           />
         </div>
-      </div>
-      <div className="flex-shrink-0 w-[480px] ">
-        <SideAction user={user} />
       </div>
     </div>
   );

@@ -88,7 +88,7 @@ const LecturerPartakeCoursesPage = async ({
   >;
 
   return (
-    <div className="flex h-full">
+    <div className="h-full">
       <div className="flex-grow flex flex-col pt-[65px] px-8 h-full">
         <div className="flex justify-between mb-12">
           <h3 className="text-2xl leading-7">Student Records</h3>
@@ -102,9 +102,6 @@ const LecturerPartakeCoursesPage = async ({
             meta={{ user }}
           />
         </div>
-      </div>
-      <div className="flex-shrink-0 w-[480px] ">
-        <SideAction user={user} />
       </div>
     </div>
   );

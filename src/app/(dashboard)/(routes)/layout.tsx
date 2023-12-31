@@ -1,4 +1,8 @@
+import { getCurrentUser } from '@/lib/auth';
 import { Sidebar } from '../__components/sidebar';
+import { SideAction } from './account/__components/side-action';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -6,14 +10,24 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = async ({
   children,
 }) => {
+  const user = await getCurrentUser();
+  const url = headers().get('referer');
+
+  if (!user) {
+    return redirect(url ?? '/');
+  }
+
   return (
-    <div className="h-full">
+    <div className="flex h-full">
       <div className="flex h-full w-72 flex-col fixed inset-y-0 z-50">
         <Sidebar />
       </div>
-      <main className="translate-x-72 w-[calc(100vw-18rem)]  h-full">
-        {children}
-      </main>
+      <div className="w-[calc(100vw-18rem)] translate-x-72 flex ">
+        <main className="h-full flex-1">{children}</main>
+        <div className="flex-shrink-0 w-[480px]">
+          <SideAction user={user} />
+        </div>
+      </div>
     </div>
   );
 };

@@ -15,6 +15,7 @@ import { eq, getTableColumns, sql } from 'drizzle-orm';
 import { searchParamsSchema } from '@/lib/validations/params';
 import { StudentAttendeeTable } from './__components/students/student-attendee-table';
 import { StudentAttendeeColumns } from './__components/students/columns';
+import { TableSelectHeader } from '@/components/table-select-header';
 
 const paramsSchema = object({ courseId: string().uuid() });
 const attendeeSearchParams = object({
@@ -44,6 +45,25 @@ const AttendeeRecordsPage = async ({
     .where(eq(courses.id, courseId));
 
   if (!course) return notFound();
+  const registeredCourses = await db.select().from(courses).where(sql`
+   ${course.id} IN  
+         (SELECT "courseId" FROM (
+            (
+               SELECT ${studentAttendees.courseId} as "courseId" from ${studentAttendees}
+               INNER JOIN ${students} ON ${students.id} = ${studentAttendees.studentId}
+               WHERE ${students.userId} = ${user.id}
+             )
+         UNION 
+             (
+               SELECT ${lecturerAttendees.courseId} as "courseId" from ${lecturerAttendees}
+               INNER JOIN ${lecturers} ON ${lecturers.id} = ${lecturerAttendees.lecturerId}
+               WHERE ${lecturers.userId} = ${user.id}
+             )
+         ) as "userCourse"
+   )
+   `);
+
+  let table: React.ReactNode;
 
   if (role === 'student') {
     const { firstName, lastName, email, id: userId } = getTableColumns(users);
@@ -77,7 +97,7 @@ const AttendeeRecordsPage = async ({
         .where(eq(studentAttendees.courseId, course.id)),
     ]);
 
-    return (
+    table = (
       <StudentAttendeeTable
         data={studentAttendeeListing as any}
         totalCount={totalCount}
@@ -112,10 +132,26 @@ const AttendeeRecordsPage = async ({
         .where(eq(lecturerAttendees.courseId, course.id)),
     ]);
 
-    console.log({ studentAttendeeListing });
+    table = <div></div>;
   }
 
-  return <div></div>;
+  return (
+    <div className="pt-14">
+      <div className="px-8">
+        <TableSelectHeader
+          title={course.name}
+          titleTag="Student Attendees"
+          selectTitle="Select Course"
+          defaultValue={`/database/courses/${course.id}`}
+          selectOptions={registeredCourses.map((course) => ({
+            title: course.name,
+            path: `/database/courses/${course.id}`,
+          }))}
+        />
+      </div>
+      {table}
+    </div>
+  );
 };
 
 export default AttendeeRecordsPage;

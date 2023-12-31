@@ -24,6 +24,7 @@ import { deleteCourse } from '@/actions/courses';
 import { ClientUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { removeStudentAttendee } from '@/actions/student-attendee';
+import { toast } from 'sonner';
 
 export type StudentAttendeeColumns = {
   id: string;
@@ -54,10 +55,19 @@ export const studentAttendeeColumns: ColumnDef<StudentAttendeeColumns>[] = [
       const { execute: removeStudent, status: removeStudentstatus } = useAction(
         removeStudentAttendee,
         {
-          onSuccess: () => {},
-          onError: () => {},
+          onSuccess: () => {
+            toast.success('Remove student succesfully');
+          },
+          onError: ({ serverError }) => {
+            if (serverError) {
+              toast.error(serverError);
+            } else {
+              toast.error('An error occurred while removing student');
+            }
+          },
         }
       );
+
       const meta = table.options.meta as { user: ClientUser; course: Course };
       const { id: studentAttendeeId } = row.original;
       return (
@@ -71,7 +81,7 @@ export const studentAttendeeColumns: ColumnDef<StudentAttendeeColumns>[] = [
             <DropdownMenuItem>
               <Link
                 className="flex justify-center items-center"
-                href={`/attendance/courses/${meta.course.id}`}
+                href={`/attendances/courses/${meta.course.id}/attendee/${studentAttendeeId}`}
               >
                 <Eye className="w-4 h-4 mr-2" /> View Attendance
               </Link>
