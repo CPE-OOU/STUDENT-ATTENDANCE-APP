@@ -67,13 +67,6 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = async ({
               </Card>
             ))}
           </div>
-
-          <div className="mt-16 ">
-            {/* <Overview data={Array.from(graphData)} /> */}
-          </div>
-        </div>
-        <div className="flex-shrink-0 w-[480px] ">
-          <SideAction user={user} />
         </div>
       </div>
     </div>

@@ -7,7 +7,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ColumnDef } from '@tanstack/react-table';
 import { Course } from '@/config/db/schema';
-import { Check, Eye, MoreHorizontal, Pencil, X } from 'lucide-react';
+import {
+  Check,
+  Eye,
+  MoreHorizontal,
+  Pencil,
+  PersonStanding,
+  X,
+} from 'lucide-react';
 
 import { format } from 'date-fns';
 import { ClientUser } from '@/lib/auth';
@@ -60,10 +67,7 @@ export const studentAttendanceColumns: ColumnDef<StudentAttendancesColumns>[] =
       cell: ({ row }) => {
         let parseDate: string;
         try {
-          parseDate = format(
-            new Date(row.original.expires),
-            'EEE, MMM d, yyyy:HH:mm'
-          );
+          parseDate = format(new Date(row.original.expires), 'd/MM/yyyy:HH:mm');
         } catch {
           parseDate = '-';
         }
@@ -126,9 +130,19 @@ export const studentAttendanceColumns: ColumnDef<StudentAttendancesColumns>[] =
                     `/database/courses/${meta.course.id}?role=student`
                   );
                 }}
+                className="capitalize"
               >
-                <Eye className="w-5 h-5 mr-2" />
-                View Attendees
+                <PersonStanding className="w-4 h-4 mr-2 text-neutral-600" />
+                attendees
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  router.push(`/attendances/${id}/courses/${meta.course.id}`);
+                }}
+                className="capitalize"
+              >
+                <Eye className="w-4 h-4 mr-2 text-neutral-600" />
+                attendance
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

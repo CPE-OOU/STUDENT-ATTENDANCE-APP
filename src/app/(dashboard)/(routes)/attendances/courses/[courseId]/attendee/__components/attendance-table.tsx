@@ -37,9 +37,6 @@ export const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
           />
         </div>
       </div>
-      <div className="flex-shrink-0 w-[480px] ">
-        <SideAction user={user} />
-      </div>
     </div>
   );
 };

@@ -21,13 +21,7 @@ export const StudentAttendanceTable: React.FC<StudentAttendanceTableProps> = ({
 }) => {
   return (
     <div className="flex h-full">
-      <div className="flex-grow flex flex-col pt-[65px] px-8 h-full">
-        <div className="flex justify-between mb-12">
-          <h3 className="text-2xl leading-7 font-semibold capitalize">
-            Student Attendance for {course.name}
-          </h3>
-        </div>
-
+      <div className="flex-grow flex flex-col px-8 h-full">
         <div className="flex-grow">
           <DataTable
             data={data}

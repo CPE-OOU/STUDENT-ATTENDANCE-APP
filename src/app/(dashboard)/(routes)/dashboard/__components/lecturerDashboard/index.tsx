@@ -8,7 +8,6 @@ import { attendances, courses, lecturerAttendees } from '@/config/db/schema';
 import postgres from 'postgres';
 import { Overview } from './overview';
 import { RecentAttendance } from '../recent-attendance';
-import { alias } from 'drizzle-orm/pg-core';
 
 interface LecturerDashboardProps {
   totalStudent: number | string;
@@ -94,16 +93,6 @@ export const LecturerDashboard: React.FC<LecturerDashboardProps> = async ({
           <div className="mt-16 ">
             <Overview data={Array.from(graphData)} />
           </div>
-        </div>
-        <div className="flex-shrink-0 w-[480px] ">
-          <SideAction
-            user={user}
-            sideAreaComponent={
-              <div>
-                <RecentAttendance />
-              </div>
-            }
-          />
         </div>
       </div>
     </div>

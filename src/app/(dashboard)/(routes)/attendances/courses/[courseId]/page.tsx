@@ -18,6 +18,7 @@ import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { TypeOf, object, string } from 'zod';
 import { StudentAttendancesTable } from './__components/attendances-table';
+import { TableSelectHeader } from '@/components/table-select-header';
 
 const currentPageSearchParams = searchParamsSchema;
 
@@ -89,54 +90,84 @@ const CourseAttendancePage = async ({
     studentId: students.id,
   });
 
-  const [attendanceListing, [{ totalCount }]] = await Promise.all([
-    db
-      .select({
-        id,
-        topicTitle,
-        attendanceCapturerId,
-        expiredAfter,
-        expires,
-        lecturerAttendeeId,
-        totalStudentPresent: sql<number>`(SELECT count(*)::INTEGER FROM ${studentAttendances}
+  const [attendanceListing, registeredCourses, [{ totalCount }]] =
+    await Promise.all([
+      db
+        .select({
+          id,
+          topicTitle,
+          attendanceCapturerId,
+          expiredAfter,
+          expires,
+          lecturerAttendeeId,
+          totalStudentPresent: sql<number>`(SELECT count(*)::INTEGER FROM ${studentAttendances}
                                   WHERE ${studentAttendances.attendanceId} = ${courseAttendances.id} 
                                   AND ${studentAttendances.present} = TRUE)`,
-        totalStudentAbsent: sql<number>`(SELECT count(*)::INTEGER FROM ${studentAttendances}
+          totalStudentAbsent: sql<number>`(SELECT count(*)::INTEGER FROM ${studentAttendances}
                                 WHERE ${studentAttendances.attendanceId} = ${courseAttendances.id} 
                                 AND ${studentAttendances.present} = FALSE)`,
-        lectureAttendee: sql<
-          SelectResultField<typeof lectureAssigneeSelect>
-        >`(SELECT ${lectureAssigneeSelect} FROM ${lecturerAttendees}
+          lectureAttendee: sql<
+            SelectResultField<typeof lectureAssigneeSelect>
+          >`(SELECT ${lectureAssigneeSelect} FROM ${lecturerAttendees}
         INNER JOIN ${lecturers} ON ${lecturers.id} = ${lecturerAttendees.lecturerId}
         INNER JOIN ${users} ON ${users.id} = ${lecturers.userId}
         WHERE ${lecturerAttendees.id} = ${lecturerAttendeeId}
         )
         `,
 
-        studentCapturer: sql<SelectResultField<typeof studentCapturerSelect>>`
+          studentCapturer: sql<SelectResultField<typeof studentCapturerSelect>>`
         (SELECT ${studentCapturerSelect} FROM ${studentAttendees}
         INNER JOIN ${students} ON ${students.id} = ${studentAttendees.studentId}
         INNER JOIN ${users} ON ${users.id} = ${students.userId}
         WHERE ${studentAttendees.id} = ${courseAttendances.attendanceCapturerId}
       )
       `,
-      })
-      .from(courseAttendances)
-      .leftJoin(courses, eq(courses.id, courseAttendances.courseId))
-      .offset(offset)
-      .limit(per_page)
-      .where(eq(courseAttendances.courseId, course.id)),
+        })
+        .from(courseAttendances)
+        .leftJoin(courses, eq(courses.id, courseAttendances.courseId))
+        .offset(offset)
+        .limit(per_page)
+        .where(eq(courseAttendances.courseId, course.id)),
+      db.select().from(courses).where(sql`
+      ${course.id} IN  
+            (SELECT "courseId" FROM (
+               (
+                  SELECT ${studentAttendees.courseId} as "courseId" from ${studentAttendees}
+                  INNER JOIN ${students} ON ${students.id} = ${studentAttendees.studentId}
+                  WHERE ${students.userId} = ${user.id}
+                )
+            UNION 
+                (
+                  SELECT ${lecturerAttendees.courseId} as "courseId" from ${lecturerAttendees}
+                  INNER JOIN ${lecturers} ON ${lecturers.id} = ${lecturerAttendees.lecturerId}
+                  WHERE ${lecturers.userId} = ${user.id}
+                )
+            ) as "userCourse"
+      )
+      `),
 
-    db
-      .select({
-        totalCount: sql<number>`CEIL(count(*)::FLOAT/${per_page})::INTEGER`,
-      })
-      .from(courseAttendances)
-      .where(eq(courseAttendances.courseId, course.id)),
-  ]);
+      db
+        .select({
+          totalCount: sql<number>`CEIL(count(*)::FLOAT/${per_page})::INTEGER`,
+        })
+        .from(courseAttendances)
+        .where(eq(courseAttendances.courseId, course.id)),
+    ]);
 
   return (
-    <div>
+    <div className="pt-14">
+      <div className="px-8">
+        <TableSelectHeader
+          title={course.name}
+          titleTag="Course Attendance"
+          selectTitle="Select Course"
+          defaultValue={`/attendances/courses/${course.id}`}
+          selectOptions={registeredCourses.map((course) => ({
+            title: course.name,
+            path: `/attendances/courses/${course.id}`,
+          }))}
+        />
+      </div>
       <StudentAttendancesTable
         data={attendanceListing as any}
         totalCount={totalCount}

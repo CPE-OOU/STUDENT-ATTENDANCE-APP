@@ -54,9 +54,11 @@ export const studentAttendanceColumns: ColumnDef<StudentAttendanceColumns>[] = [
     accessorKey: 'joinTime',
     header: 'Capture Time',
     enableHiding: false,
-    cell: ({ getValue }) => (
+    cell: ({ getValue, row }) => (
       <div>
-        {format(new Date(getValue() as string), 'EEEE, MMMM do, yyyy:HH:mm')}
+        {row.original.present
+          ? format(new Date(getValue() as string), 'd/MM/yyyy:HH:mm')
+          : '-'}
       </div>
     ),
   },

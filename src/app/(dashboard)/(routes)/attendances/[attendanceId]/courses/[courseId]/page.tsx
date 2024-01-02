@@ -16,12 +16,12 @@ import { eq, getTableColumns, sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { TypeOf, object, string } from 'zod';
-import { StudentAttendanceTable } from './__components/attendance-table';
-
+import { StudentTakenAttendanceTable } from './__components/attendance-table';
+import { format } from 'date-fns';
 const currentPageSearchParams = searchParamsSchema;
 const paramsSchema = object({
   courseId: string().uuid(),
-  attendeeId: string().uuid(),
+  attendanceId: string().uuid(),
 });
 
 const StudendAttendancePage = async ({
@@ -34,7 +34,8 @@ const StudendAttendancePage = async ({
   params = paramsSchema.parse(params);
   searchParams = currentPageSearchParams.parse(searchParams);
   const { offset, per_page } = searchParams;
-  const { courseId, attendeeId } = paramsSchema.parse(params);
+  const { courseId, attendanceId: paramAttendanceId } =
+    paramsSchema.parse(params);
   const user = await getCurrentUser();
   const url = headers().get('referer')!;
 
@@ -42,6 +43,23 @@ const StudendAttendancePage = async ({
     return redirect(`/sign-in?callbackUrl=${url}`);
   }
 
+  const [[course], [courseAttendance]] = await Promise.all([
+    db.select().from(courses).where(eq(courses.id, courseId)),
+    db
+      .select()
+      .from(attendances)
+      .where(
+        sql`${attendances.id} = ${paramAttendanceId} AND ${attendances.courseId} = ${courseId}`
+      ),
+  ]);
+
+  if (!(course && courseAttendance)) return notFound();
+
+  const {
+    topicTitle,
+    id: attendanceId,
+    lecturerAttendeeId,
+  } = getTableColumns(attendances);
   const {
     firstName,
     lastName,
@@ -49,35 +67,10 @@ const StudendAttendancePage = async ({
     imageUrl,
     id: userId,
   } = getTableColumns(users);
-  const { id: studentAttendeeId } = getTableColumns(studentAttendees);
-  const [[course], [courseAttendee]] = await Promise.all([
-    db.select().from(courses).where(eq(courses.id, courseId)),
-    db
-      .select({
-        id: studentAttendeeId,
-        studentAttendeeId,
-        firstName,
-        lastName,
-        fullName: sql<string>`concat(${firstName}, ' ', ${lastName})`,
-        email,
-        imageUrl,
-        userId,
-      })
-      .from(studentAttendees)
-      .innerJoin(students, eq(students.id, studentAttendees.studentId))
-      .innerJoin(users, eq(users.id, students.userId))
-      .where(
-        sql`${studentAttendees.courseId} = ${courseId} AND ${studentAttendees.id} = ${attendeeId}`
-      ),
-  ]);
-  if (!(course && courseAttendee)) return notFound();
-
-  const { topicTitle, lecturerAttendeeId } = getTableColumns(attendances);
-
   const {
     present,
     joinTime,
-    id: attendanceId,
+    id: studentAttendanceId,
   } = getTableColumns(studentAttendances);
 
   const { title, formOfAddress } = getTableColumns(lecturers);
@@ -94,11 +87,12 @@ const StudendAttendancePage = async ({
     lecturerId: lecturers.id,
   });
 
+  const { level, department, university } = getTableColumns(students);
+
   const studentCapturerSelect = jsonBuildObject({
     id: studentAttendees.id,
     firstName,
     lastName,
-    fullName: sql<string>`concat(${firstName}, ' ', ${lastName})`,
     email,
     imageUrl,
     userId,
@@ -108,10 +102,15 @@ const StudendAttendancePage = async ({
   const [takenAttendanceListing, [{ totalCount }]] = await Promise.all([
     db
       .select({
-        id: attendanceId,
-        topicTitle,
+        id: studentAttendanceId,
+        fullName: sql<string>`concat(${firstName}, ' ', ${lastName})`,
         present,
         joinTime,
+        level,
+        department,
+        university,
+        studentAttendanceId,
+        attendanceId,
         lecturerAttendeeId,
         lectureAttendee: sql<SelectResultField<typeof lectureAssigneeSelect>>`(
           SELECT ${lectureAssigneeSelect} FROM ${lecturerAttendees}
@@ -130,13 +129,18 @@ const StudendAttendancePage = async ({
       })
       .from(studentAttendances)
       .innerJoin(
+        studentAttendees,
+        eq(studentAttendees.id, studentAttendances.studentAttendeeId)
+      )
+      .innerJoin(students, eq(students.id, studentAttendees.studentId))
+      .innerJoin(users, eq(users.id, students.userId))
+      .innerJoin(
         attendances,
         eq(attendances.id, studentAttendances.attendanceId)
       )
       .offset(offset)
       .limit(per_page)
-      .where(sql`${studentAttendances.studentAttendeeId} = ${attendeeId}
-      AND ${attendances.courseId} = ${courseId}`),
+      .where(eq(studentAttendances.attendanceId, attendanceId)),
 
     db
       .select({
@@ -147,10 +151,7 @@ const StudendAttendancePage = async ({
         attendances,
         eq(attendances.id, studentAttendances.attendanceId)
       )
-      .where(
-        sql`${studentAttendances.studentAttendeeId} = ${attendeeId} 
-        AND ${attendances.courseId} = ${courseId}`
-      ),
+      .where(eq(studentAttendances.attendanceId, attendanceId)),
   ]);
 
   return (
@@ -158,26 +159,25 @@ const StudendAttendancePage = async ({
       <div className="px-8">
         <div className="space-y-4">
           <h4 className="text-2xl font-semibold leaing-[120%] uppercase">
-            Course Attendance
+            {course.name}
           </h4>
 
-          <div className="space-y-4">
-            <p className="text-xm text-neutral-600 font-semibold uppercase">
-              {course.name}
-            </p>
-            <div className="flex items-center gap-x-4">
-              <span className="text-muted-foreground text-lg">
-                Attendee Name:
-              </span>
-              <p className="text-neutral-800 text-2xl capitalize">
-                {courseAttendee.fullName}
-              </p>
+          <div className="space-y-2">
+            <p className="text-xm text-neutral-600 font-semibold capitalize">{`Attendance taken for ${courseAttendance.topicTitle}`}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground text-sm lowercase">{`Attendance taken time - ${format(
+                new Date(courseAttendance.createdAt!),
+                'd/MM/yyyy:HH:mm'
+              )}`}</p>
+              <p className="text-muted-foreground text-sm lowercase">{`Attendance end time - ${format(
+                new Date(courseAttendance.expires!),
+                'd/MM/yyyy:HH:mm'
+              )}`}</p>
             </div>
           </div>
         </div>
       </div>
-
-      <StudentAttendanceTable
+      <StudentTakenAttendanceTable
         totalCount={totalCount}
         course={course}
         data={takenAttendanceListing as any}

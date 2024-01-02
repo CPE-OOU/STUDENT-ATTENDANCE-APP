@@ -77,9 +77,7 @@ export const studentAttendanceColumns: ColumnDef<StudentAttendanceColumns>[] = [
     header: 'Capture Time',
     enableHiding: false,
     cell: ({ getValue }) => (
-      <div>
-        {format(new Date(getValue() as string), 'EEEE, MMMM do, yyyy:HH:mm')}
-      </div>
+      <div>{format(new Date(getValue() as string), 'd/MM/yyyy:HH:mm')}</div>
     ),
   },
   {

@@ -27,7 +27,6 @@ const options: NextAuthOptions = {
           .select()
           .from(users)
           .where(ilike(users.email, credentials!.email));
-        console.log({ user });
 
         if (!(user && verifyPassword(user, credentials.password))) {
           throw Error('User credential not a match. Check email or password');
