@@ -4,7 +4,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 
-export type StudentAttendanceColumns = {
+export type StudentAttendanceApproveColumns = {
   id: string;
   topicTitle: string;
   present: boolean | null;
@@ -33,51 +33,52 @@ export type StudentAttendanceColumns = {
   };
 };
 
-export const studentAttendanceColumns: ColumnDef<StudentAttendanceColumns>[] = [
-  {
-    accessorKey: 'topicTitle',
-    header: 'Topic Title',
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'present',
-    header: 'Present',
-    enableHiding: false,
-    cell: ({ getValue }) =>
-      getValue() ? (
-        <Check className="w-5 h-5 text-green-600" />
-      ) : (
-        <X className="w-5 h-5 text-rose-600" />
+export const studentAttendanceApproveColumns: ColumnDef<StudentAttendanceApproveColumns>[] =
+  [
+    {
+      accessorKey: 'topicTitle',
+      header: 'Topic Title',
+      enableHiding: false,
+    },
+    {
+      accessorKey: 'present',
+      header: 'Present',
+      enableHiding: false,
+      cell: ({ getValue }) =>
+        getValue() ? (
+          <Check className="w-5 h-5 text-green-600" />
+        ) : (
+          <X className="w-5 h-5 text-rose-600" />
+        ),
+    },
+    {
+      accessorKey: 'joinTime',
+      header: 'Capture Time',
+      enableHiding: false,
+      cell: ({ getValue, row }) => (
+        <div>
+          {row.original.present
+            ? format(new Date(getValue() as string), 'd/MM/yyyy:HH:mm')
+            : '-'}
+        </div>
       ),
-  },
-  {
-    accessorKey: 'joinTime',
-    header: 'Capture Time',
-    enableHiding: false,
-    cell: ({ getValue, row }) => (
-      <div>
-        {row.original.present
-          ? format(new Date(getValue() as string), 'd/MM/yyyy:HH:mm')
-          : '-'}
-      </div>
-    ),
-  },
-  {
-    accessorFn: ({ attendanceTakenBy }) =>
-      attendanceTakenBy
-        ? `${attendanceTakenBy.firstName} ${attendanceTakenBy.lastName}`
-        : '-',
-    header: 'Taken By',
-    enableHiding: false,
-  },
+    },
+    {
+      accessorFn: ({ attendanceTakenBy }) =>
+        attendanceTakenBy
+          ? `${attendanceTakenBy.firstName} ${attendanceTakenBy.lastName}`
+          : '-',
+      header: 'Taken By',
+      enableHiding: false,
+    },
 
-  //<X />
-  {
-    accessorFn: ({ lectureAttendee }) =>
-      `${lectureAttendee.formOfAddress?.toUpperCase()}. ${
-        lectureAttendee.firstName
-      } ${lectureAttendee.lastName}`,
-    header: 'Created by',
-    enableHiding: false,
-  },
-];
+    //<X />
+    {
+      accessorFn: ({ lectureAttendee }) =>
+        `${lectureAttendee.formOfAddress?.toUpperCase()}. ${
+          lectureAttendee.firstName
+        } ${lectureAttendee.lastName}`,
+      header: 'Created by',
+      enableHiding: false,
+    },
+  ];

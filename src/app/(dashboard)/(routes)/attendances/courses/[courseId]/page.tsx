@@ -17,7 +17,10 @@ import { alias } from 'drizzle-orm/pg-core';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { TypeOf, object, string } from 'zod';
-import { StudentAttendancesTable } from './__components/attendances-table';
+import {
+  LecturerAttendanceViewTable,
+  StudentAttendanceViewTable,
+} from './__components/attendance-table';
 import { TableSelectHeader } from '@/components/table-select-header';
 
 const currentPageSearchParams = searchParamsSchema;
@@ -43,11 +46,38 @@ const CourseAttendancePage = async ({
   }
 
   const [course] = await db
-    .select()
+    .select({
+      ...getTableColumns(courses),
+      studentAttendee: jsonBuildObject(getTableColumns(studentAttendees)),
+      lecturerAttendee: jsonBuildObject(getTableColumns(lecturerAttendees)),
+    })
     .from(courses)
+    .leftJoin(
+      lecturerAttendees,
+      sql`
+        ${lecturerAttendees.id} =
+        (
+          SELECT ${lecturerAttendees.id} FROM ${lecturerAttendees}
+          INNER JOIN ${lecturers} ON ${lecturers.id} = ${lecturerAttendees.lecturerId}
+          WHERE ${lecturers.userId} = ${user.id} AND ${lecturerAttendees.courseId} = ${courseId}
+        )
+    `
+    )
+    .leftJoin(
+      studentAttendees,
+      sql`${studentAttendees.id} = (
+        SELECT ${studentAttendees.id} FROM ${studentAttendees}
+        INNER JOIN ${students} ON ${students.id} = ${studentAttendees.studentId}
+        WHERE ${students.userId} = ${user.id} AND ${studentAttendees.courseId} = ${courseId}
+    )`
+    )
     .where(eq(courses.id, courseId));
 
   if (!course) return notFound();
+
+  if (!(course.lecturerAttendee || course.studentAttendee)) {
+    return redirect('/');
+  }
 
   const courseAttendances = alias(attendances, 'course_attendance');
 
@@ -90,45 +120,84 @@ const CourseAttendancePage = async ({
     studentId: students.id,
   });
 
-  const [attendanceListing, registeredCourses, [{ totalCount }]] =
-    await Promise.all([
-      db
-        .select({
-          id,
-          topicTitle,
-          attendanceCapturerId,
-          expiredAfter,
-          expires,
-          lecturerAttendeeId,
-          totalStudentPresent: sql<number>`(SELECT count(*)::INTEGER FROM ${studentAttendances}
-                                  WHERE ${studentAttendances.attendanceId} = ${courseAttendances.id} 
-                                  AND ${studentAttendances.present} = TRUE)`,
-          totalStudentAbsent: sql<number>`(SELECT count(*)::INTEGER FROM ${studentAttendances}
-                                WHERE ${studentAttendances.attendanceId} = ${courseAttendances.id} 
-                                AND ${studentAttendances.present} = FALSE)`,
-          lectureAttendee: sql<
-            SelectResultField<typeof lectureAssigneeSelect>
-          >`(SELECT ${lectureAssigneeSelect} FROM ${lecturerAttendees}
+  let studentViewAttendanceListing;
+  let lecturerViewAttedanceListing;
+  if (course.studentAttendee) {
+    const { present, joinTime, createdAt } =
+      getTableColumns(studentAttendances);
+    const { id } = course.studentAttendee;
+    studentViewAttendanceListing = await db
+      .select({
+        id: courseAttendances.id,
+        topicTitle,
+        present,
+        joinTime,
+        lecturerAttendeeId,
+        takenTime: joinTime,
+        lectureAttendee: sql<SelectResultField<typeof lectureAssigneeSelect>>`(
+        SELECT ${lectureAssigneeSelect} FROM ${lecturerAttendees}
         INNER JOIN ${lecturers} ON ${lecturers.id} = ${lecturerAttendees.lecturerId}
         INNER JOIN ${users} ON ${users.id} = ${lecturers.userId}
         WHERE ${lecturerAttendees.id} = ${lecturerAttendeeId}
-        )
-        `,
+        )`,
 
-          studentCapturer: sql<SelectResultField<typeof studentCapturerSelect>>`
-        (SELECT ${studentCapturerSelect} FROM ${studentAttendees}
-        INNER JOIN ${students} ON ${students.id} = ${studentAttendees.studentId}
-        INNER JOIN ${users} ON ${users.id} = ${students.userId}
-        WHERE ${studentAttendees.id} = ${courseAttendances.attendanceCapturerId}
-      )
+        attendanceTakenBy: sql<SelectResultField<typeof studentCapturerSelect>>`
+      (SELECT ${studentCapturerSelect} FROM ${studentAttendees}
+      INNER JOIN ${students} ON ${students.id} = ${studentAttendees.studentId}
+      INNER JOIN ${users} ON ${users.id} = ${students.userId}
+      WHERE ${studentAttendees.id} = ${courseAttendances.attendanceCapturerId}
+    )
       `,
-        })
-        .from(courseAttendances)
-        .leftJoin(courses, eq(courses.id, courseAttendances.courseId))
-        .offset(offset)
-        .limit(per_page)
-        .where(eq(courseAttendances.courseId, course.id)),
-      db.select().from(courses).where(sql`
+      })
+      .from(studentAttendances)
+      .innerJoin(
+        courseAttendances,
+        eq(courseAttendances.id, studentAttendances.attendanceId)
+      )
+      .offset(offset)
+      .limit(per_page).where(sql`${studentAttendances.studentAttendeeId} = ${id}
+    AND ${courseAttendances.courseId} = ${courseId}`);
+  } else {
+    lecturerViewAttedanceListing = await db
+      .select({
+        id,
+        topicTitle,
+        attendanceCapturerId,
+        expiredAfter,
+        expires,
+        lecturerAttendeeId,
+        totalStudentPresent: sql<number>`(SELECT count(*)::INTEGER FROM ${studentAttendances}
+                              WHERE ${studentAttendances.attendanceId} = ${courseAttendances.id} 
+                              AND ${studentAttendances.present} = TRUE)`,
+        totalStudentAbsent: sql<number>`(SELECT count(*)::INTEGER FROM ${studentAttendances}
+                            WHERE ${studentAttendances.attendanceId} = ${courseAttendances.id} 
+                            AND ${studentAttendances.present} = FALSE)`,
+        lectureAttendee: sql<
+          SelectResultField<typeof lectureAssigneeSelect>
+        >`(SELECT ${lectureAssigneeSelect} FROM ${lecturerAttendees}
+    INNER JOIN ${lecturers} ON ${lecturers.id} = ${lecturerAttendees.lecturerId}
+    INNER JOIN ${users} ON ${users.id} = ${lecturers.userId}
+    WHERE ${lecturerAttendees.id} = ${lecturerAttendeeId}
+    )
+    `,
+
+        studentCapturer: sql<SelectResultField<typeof studentCapturerSelect>>`
+    (SELECT ${studentCapturerSelect} FROM ${studentAttendees}
+    INNER JOIN ${students} ON ${students.id} = ${studentAttendees.studentId}
+    INNER JOIN ${users} ON ${users.id} = ${students.userId}
+    WHERE ${studentAttendees.id} = ${courseAttendances.attendanceCapturerId}
+  )
+  `,
+      })
+      .from(courseAttendances)
+      .leftJoin(courses, eq(courses.id, courseAttendances.courseId))
+      .offset(offset)
+      .limit(per_page)
+      .where(eq(courseAttendances.courseId, course.id));
+  }
+
+  const [registeredCourses, [{ totalCount }]] = await Promise.all([
+    db.select().from(courses).where(sql`
       ${course.id} IN  
             (SELECT "courseId" FROM (
                (
@@ -146,13 +215,13 @@ const CourseAttendancePage = async ({
       )
       `),
 
-      db
-        .select({
-          totalCount: sql<number>`CEIL(count(*)::FLOAT/${per_page})::INTEGER`,
-        })
-        .from(courseAttendances)
-        .where(eq(courseAttendances.courseId, course.id)),
-    ]);
+    db
+      .select({
+        totalCount: sql<number>`CEIL(count(*)::FLOAT/${per_page})::INTEGER`,
+      })
+      .from(courseAttendances)
+      .where(eq(courseAttendances.courseId, course.id)),
+  ]);
 
   return (
     <div className="pt-14">
@@ -168,12 +237,23 @@ const CourseAttendancePage = async ({
           }))}
         />
       </div>
-      <StudentAttendancesTable
-        data={attendanceListing as any}
-        totalCount={totalCount}
-        user={user}
-        course={course}
-      />
+      {lecturerViewAttedanceListing && (
+        <LecturerAttendanceViewTable
+          data={lecturerViewAttedanceListing as any}
+          totalCount={totalCount}
+          user={user}
+          course={course}
+        />
+      )}
+
+      {studentViewAttendanceListing && (
+        <StudentAttendanceViewTable
+          data={studentViewAttendanceListing as any}
+          totalCount={totalCount}
+          user={user}
+          course={course}
+        />
+      )}
     </div>
   );
 };

@@ -23,6 +23,7 @@ import { useAction } from 'next-safe-action/hook';
 import { deleteCourse } from '@/actions/courses';
 import { ClientUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
+import { PersonIcon } from '@radix-ui/react-icons';
 
 export type courseColumns = LectureBuildCoursePayload;
 export const courseColumns: ColumnDef<courseColumns>[] = [
@@ -54,16 +55,20 @@ export const courseColumns: ColumnDef<courseColumns>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {/* <DropDownMenu */}
-            <DropdownMenuItem>
-              <Pencil className="w-4 h-4 mr-2" /> Edit
-            </DropdownMenuItem>
             <DropdownMenuItem>
               <Link
                 className="flex justify-center items-center"
                 href={`/courses/${id}`}
               >
-                <Eye className="w-4 h-4 mr-2" /> View
+                <Eye className="w-4 h-4 mr-2" /> Course details
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link
+                className="flex justify-center items-center"
+                href={`/attendances/courses/${id}`}
+              >
+                <PersonIcon className="w-4 h-4 mr-2" /> Attendance
               </Link>
             </DropdownMenuItem>
 
@@ -71,16 +76,14 @@ export const courseColumns: ColumnDef<courseColumns>[] = [
 
             <DropdownMenuItem
               className="text-rose-600"
-              onClick={() =>
-                execute({ courseId: id, lecturerId: meta.user.lecturer!.id })
-              }
+              onClick={() => execute({ courseId: id, userId: meta.user.id })}
             >
               {deleteCourseStatus === 'executing' ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Trash className="w-4 h-4 mr-2" />
               )}
-              Delete
+              {meta.user.lecturer ? 'delete' : 'leave'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

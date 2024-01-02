@@ -16,7 +16,7 @@ import { eq, getTableColumns, sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { TypeOf, object, string } from 'zod';
-import { StudentAttendanceTable } from './__components/attendance-table';
+import { StudentAttenanceApproveTable } from './__components/attendance-table';
 
 const currentPageSearchParams = searchParamsSchema;
 const paramsSchema = object({
@@ -177,7 +177,7 @@ const StudendAttendancePage = async ({
         </div>
       </div>
 
-      <StudentAttendanceTable
+      <StudentAttenanceApproveTable
         totalCount={totalCount}
         course={course}
         data={takenAttendanceListing as any}

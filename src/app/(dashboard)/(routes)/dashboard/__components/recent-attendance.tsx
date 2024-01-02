@@ -27,7 +27,6 @@ export const RecentAttendance = async () => {
   const { firstName, lastName } = getTableColumns(users);
   const { title } = getTableColumns(lecturers);
   const { id, topicTitle, createdAt } = getTableColumns(attendances);
-  console.log({ user });
   const recentAttendance = await db
     .select({
       id,
