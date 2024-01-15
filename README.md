@@ -27,12 +27,21 @@ Once you have Node.js and MongoDB installed, follow these steps:
 ## Usage
 
 After you've completed the installation process, you're ready to start using the application.
+## Student Name
 
-### Certificate Generation
+#### Name
 
-<!-- <img src="THE_IMAGE" width="500" height="300"> -->
+## Adetimilehin Abdulrahman Rahman
 
-### Certificate Verification
+### Matric No
 
-<!-- <img src="THE_IMAGE" width="500" height="300"> -->
+## EES/18/19/0072
+
+#### Name
+
+## OTUA MOSES EWOMA
+
+### Matric No
+
+## EES/18/19/0489
 
