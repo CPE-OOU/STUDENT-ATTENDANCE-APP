@@ -1,0 +1,42 @@
+# Development of a Student Attendance System using Facial Recognition(ML)
+
+## Table of Contents
+
+1. Introduction
+2. Installation
+3. Usage
+
+## Introduction
+
+The project, "Development of a Blockchain-based Digital Certificate Verification System," aims to revolutionize the way academic credentials are issued and verified at Olabisi Onabanjo University. Leveraging the power of blockchain technology, the project introduces a secure, efficient, and scalable system for certificate verification.
+
+The system utilizes the Celo blockchain platform, a mobile-first approach that allows users to send and receive digital assets using just a phone number. Each certificate is unique, secure, and permanently recorded on the blockchain, significantly reducing the risk of certificate forgery. The system also includes a QR code feature for instant verification of the certificate’s authenticity.
+
+While the system is currently designed for Olabisi Onabanjo University, the underlying technology has the potential to be scaled and customized for other universities and institutions. This project represents a significant advancement in the educational sector, offering a practical and accessible solution for issuing and verifying academic credentials.
+
+## Installation
+
+Before you start, make sure you have Node.js installed on your machine. To check whether Node.js is installed you have to run this command `node --version`.If you got a response that looks something like
+this `v[number].[number].[number]` like on my system, I had the `v21.0.1` installed. Node.js version starting from `v18` will work just fine with the project.
+
+Once you have Node.js and MongoDB installed, follow these steps:
+
+1. **Clone the Repository**: First, clone this repository to your local machine using `git clone https://github.com/CPE-OOU/STUDENT-ATTENDANCE-APP.git`.
+
+2. **Install Dependencies**: Open the project in any IDE of your choose, Bring up your integrated terminal or you can also use your standalone terminal app but ensure you are properly navigated to the project directory. Then run this command `npm install` and wait for the process to complete
+
+3. **Set Up Our Environmental variable**: Ensure that the environmental variables are properly set up, As these contains project secret with are not to be expose to the general public.
+
+4. **Run the Project**: Finally, run `npm start` to start the project in a development mode.
+
+## Usage
+
+After you've completed the installation process, you're ready to start using the application.
+
+### Certificate Generation
+
+<!-- <img src="THE_IMAGE" width="500" height="300"> -->
+
+### Certificate Verification
+
+<!-- <img src="THE_IMAGE" width="500" height="300"> -->
